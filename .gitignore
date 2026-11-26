@@ -1,0 +1,11 @@
+# Gradle & IDE
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Internal host-specific documentation (never commit to public repo)
+docs/internal/

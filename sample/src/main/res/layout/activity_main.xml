@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_metrics_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp" />
+
+        <View
+            android:id="@+id/view_reference_bar"
+            android:layout_width="180dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="12dp"
+            android:background="#FF1976D2" />
+
+        <Button
+            android:id="@+id/btn_open_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Fragment Custom Directive Demo" />
+
+        <Button
+            android:id="@+id/btn_open_short_side"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="ShortSide + EventListener Demo" />
+
+        <Button
+            android:id="@+id/btn_open_native"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Native / NoAdapt Demo" />
+
+        <Button
+            android:id="@+id/btn_open_compose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Compose LocalDensity Demo" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,267 @@
+public final class cn.jingzhuan.adapt.autosize.AdaptBasis extends java.lang.Enum<cn.jingzhuan.adapt.autosize.AdaptBasis> {
+  public static final cn.jingzhuan.adapt.autosize.AdaptBasis WIDTH;
+  public static final cn.jingzhuan.adapt.autosize.AdaptBasis HEIGHT;
+  public static cn.jingzhuan.adapt.autosize.AdaptBasis[] values();
+  public static cn.jingzhuan.adapt.autosize.AdaptBasis valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<cn.jingzhuan.adapt.autosize.AdaptBasis> getEntries();
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptConfig {
+  public final float getDesignWidthDp();
+  public final float getDesignHeightDp();
+  public final cn.jingzhuan.adapt.autosize.AdaptBasis getBasis();
+  public final boolean getExcludeFontScale();
+  public final float getPrivateFontScale();
+  public final boolean getUseDeviceSize();
+  public final int getStatusBarHeightPx();
+  public final boolean getSupportDp();
+  public final boolean getSupportSp();
+  public final boolean getSupportScreenSizeDp();
+  public final boolean getCustomFragment();
+  public final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy getSyncPolicy();
+  public final boolean getDebugLog();
+  public final cn.jingzhuan.adapt.autosize.AdaptStrategy getStrategy();
+  public final java.util.Set<java.lang.Class<?>> getCancelTargets();
+  public final java.util.Map<java.lang.Class<?>, cn.jingzhuan.adapt.autosize.AdaptDirective> getCustomTargets();
+  public cn.jingzhuan.adapt.autosize.AdaptConfig();
+  public cn.jingzhuan.adapt.autosize.AdaptConfig(float, float, cn.jingzhuan.adapt.autosize.AdaptBasis, boolean, float, boolean, int, boolean, boolean, boolean, boolean, cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy, boolean, cn.jingzhuan.adapt.autosize.AdaptStrategy, java.util.Set, java.util.Map, kotlin.jvm.internal.DefaultConstructorMarker);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptConfig$Builder {
+  public cn.jingzhuan.adapt.autosize.AdaptConfig$Builder();
+  public final float getDesignWidthDp();
+  public final void setDesignWidthDp(float);
+  public final float getDesignHeightDp();
+  public final void setDesignHeightDp(float);
+  public final cn.jingzhuan.adapt.autosize.AdaptBasis getBasis();
+  public final void setBasis(cn.jingzhuan.adapt.autosize.AdaptBasis);
+  public final boolean getExcludeFontScale();
+  public final void setExcludeFontScale(boolean);
+  public final float getPrivateFontScale();
+  public final void setPrivateFontScale(float);
+  public final boolean getUseDeviceSize();
+  public final void setUseDeviceSize(boolean);
+  public final int getStatusBarHeightPx();
+  public final void setStatusBarHeightPx(int);
+  public final boolean getSupportDp();
+  public final void setSupportDp(boolean);
+  public final boolean getSupportSp();
+  public final void setSupportSp(boolean);
+  public final boolean getSupportScreenSizeDp();
+  public final void setSupportScreenSizeDp(boolean);
+  public final boolean getCustomFragment();
+  public final void setCustomFragment(boolean);
+  public final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy getSyncPolicy();
+  public final void setSyncPolicy(cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy);
+  public final boolean getDebugLog();
+  public final void setDebugLog(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptStrategy getStrategy();
+  public final void setStrategy(cn.jingzhuan.adapt.autosize.AdaptStrategy);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder designSize(float, float);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder basis(cn.jingzhuan.adapt.autosize.AdaptBasis);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder excludeFontScale(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder privateFontScale(float);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder useDeviceSize(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder statusBarHeightPx(int);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder supportDp(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder supportSp(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder supportScreenSizeDp(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder customFragment(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder syncPolicy(cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder debugLog(boolean);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder strategy(cn.jingzhuan.adapt.autosize.AdaptStrategy);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder cancelTarget(java.lang.Class<?>);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder cancelTargets(java.lang.Class<?>...);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder customTarget(java.lang.Class<?>, cn.jingzhuan.adapt.autosize.AdaptDirective);
+  public final cn.jingzhuan.adapt.autosize.AdaptConfig build();
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptConfigKt {
+  public static final cn.jingzhuan.adapt.autosize.AdaptConfig adaptConfig(kotlin.jvm.functions.Function1<? super cn.jingzhuan.adapt.autosize.AdaptConfig$Builder, kotlin.Unit>);
+}
+
+public abstract class cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public cn.jingzhuan.adapt.autosize.AdaptDirective(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptDirective$Height extends cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public cn.jingzhuan.adapt.autosize.AdaptDirective$Height(float);
+  public final float getSizeDp();
+  public final float component1();
+  public final cn.jingzhuan.adapt.autosize.AdaptDirective$Height copy(float);
+  public static cn.jingzhuan.adapt.autosize.AdaptDirective$Height copy$default(cn.jingzhuan.adapt.autosize.AdaptDirective$Height, float, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptDirective$Native extends cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public static final cn.jingzhuan.adapt.autosize.AdaptDirective$Native INSTANCE;
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide extends cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide(float, boolean);
+  public cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide(float, boolean, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final float getEffectiveSizeDp();
+  public final boolean getUseRealDisplay();
+  public final float component1();
+  public final boolean component2();
+  public final cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide copy(float, boolean);
+  public static cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide copy$default(cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide, float, boolean, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+  public cn.jingzhuan.adapt.autosize.AdaptDirective$ShortSide(float);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptDirective$Skip extends cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public static final cn.jingzhuan.adapt.autosize.AdaptDirective$Skip INSTANCE;
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptDirective$Width extends cn.jingzhuan.adapt.autosize.AdaptDirective {
+  public cn.jingzhuan.adapt.autosize.AdaptDirective$Width(float);
+  public final float getSizeDp();
+  public final float component1();
+  public final cn.jingzhuan.adapt.autosize.AdaptDirective$Width copy(float);
+  public static cn.jingzhuan.adapt.autosize.AdaptDirective$Width copy$default(cn.jingzhuan.adapt.autosize.AdaptDirective$Width, float, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptEvent {
+  public cn.jingzhuan.adapt.autosize.AdaptEvent(cn.jingzhuan.adapt.autosize.AdaptEvent$Type, float, java.lang.String);
+  public final cn.jingzhuan.adapt.autosize.AdaptEvent$Type getType();
+  public final float getTargetDensity();
+  public final java.lang.String getReason();
+  public final cn.jingzhuan.adapt.autosize.AdaptEvent$Type component1();
+  public final float component2();
+  public final java.lang.String component3();
+  public final cn.jingzhuan.adapt.autosize.AdaptEvent copy(cn.jingzhuan.adapt.autosize.AdaptEvent$Type, float, java.lang.String);
+  public static cn.jingzhuan.adapt.autosize.AdaptEvent copy$default(cn.jingzhuan.adapt.autosize.AdaptEvent, cn.jingzhuan.adapt.autosize.AdaptEvent$Type, float, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.AdaptEvent$Type extends java.lang.Enum<cn.jingzhuan.adapt.autosize.AdaptEvent$Type> {
+  public static final cn.jingzhuan.adapt.autosize.AdaptEvent$Type APPLIED;
+  public static final cn.jingzhuan.adapt.autosize.AdaptEvent$Type SKIPPED;
+  public static final cn.jingzhuan.adapt.autosize.AdaptEvent$Type DEFERRED;
+  public static final cn.jingzhuan.adapt.autosize.AdaptEvent$Type INVALID;
+  public static final cn.jingzhuan.adapt.autosize.AdaptEvent$Type NATIVE;
+  public static cn.jingzhuan.adapt.autosize.AdaptEvent$Type[] values();
+  public static cn.jingzhuan.adapt.autosize.AdaptEvent$Type valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<cn.jingzhuan.adapt.autosize.AdaptEvent$Type> getEntries();
+}
+
+public interface cn.jingzhuan.adapt.autosize.AdaptEventListener {
+  public abstract void onAdaptEvent(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptEvent);
+}
+
+public interface cn.jingzhuan.adapt.autosize.AdaptStrategy {
+  public abstract cn.jingzhuan.adapt.autosize.AdaptDirective resolve(java.lang.Object, android.app.Activity);
+}
+
+public interface cn.jingzhuan.adapt.autosize.AdaptTarget {
+  public abstract cn.jingzhuan.adapt.autosize.AdaptDirective adaptDirective();
+}
+
+public final class cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy extends java.lang.Enum<cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy> {
+  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy FOREGROUND_SHARED;
+  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy ACTIVITY_ONLY;
+  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy LEGACY_SHARED;
+  public static cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy[] values();
+  public static cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy> getEntries();
+}
+
+public interface cn.jingzhuan.adapt.autosize.NoAdapt {
+}
+
+public final class cn.jingzhuan.adapt.autosize.ScreenAdapt {
+  public static final cn.jingzhuan.adapt.autosize.ScreenAdapt INSTANCE;
+  public static final void init(android.app.Application, cn.jingzhuan.adapt.autosize.AdaptConfig);
+  public static void init$default(android.app.Application, cn.jingzhuan.adapt.autosize.AdaptConfig, int, java.lang.Object);
+  public static final void init(android.app.Application, kotlin.jvm.functions.Function1<? super cn.jingzhuan.adapt.autosize.AdaptConfig$Builder, kotlin.Unit>);
+  public static final boolean isInitialized();
+  public static final android.content.Context wrapContext(android.content.Context);
+  public static final android.content.res.Configuration applyOverrideConfiguration(android.content.res.Configuration);
+  public static final void apply(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptDirective);
+  public static final void applyNative(android.app.Activity);
+  public static final void reapply(android.app.Activity);
+  public static final void ensureApplied(android.app.Activity);
+  public static final cn.jingzhuan.adapt.autosize.TargetMetrics resolveTargetMetrics(android.content.Context, cn.jingzhuan.adapt.autosize.AdaptDirective);
+  public static cn.jingzhuan.adapt.autosize.TargetMetrics resolveTargetMetrics$default(android.content.Context, cn.jingzhuan.adapt.autosize.AdaptDirective, int, java.lang.Object);
+  public static final cn.jingzhuan.adapt.autosize.WindowInfo getWindowInfo(android.app.Activity);
+  public static final void addListener(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptEventListener);
+  public static final void removeListener(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptEventListener);
+  public static final void init(android.app.Application);
+  public static final cn.jingzhuan.adapt.autosize.TargetMetrics resolveTargetMetrics(android.content.Context);
+}
+
+public final class cn.jingzhuan.adapt.autosize.ScreenMetrics {
+  public static final cn.jingzhuan.adapt.autosize.ScreenMetrics INSTANCE;
+  public static final int[] getWindowSize(android.content.Context);
+  public static final int[] getRealDisplaySize(android.content.Context);
+  public static final int getStatusBarHeight(android.content.Context);
+  public static int getStatusBarHeight$default(android.content.Context, int, java.lang.Object);
+  public static final int getNavigationBarHeight(android.content.Context);
+  public static final int getStatusBarHeight();
+}
+
+public final class cn.jingzhuan.adapt.autosize.TargetMetrics {
+  public cn.jingzhuan.adapt.autosize.TargetMetrics(float, int, float, float, int, int);
+  public final float getDensity();
+  public final int getDensityDpi();
+  public final float getScaledDensity();
+  public final float getFontScale();
+  public final int getScreenWidthDp();
+  public final int getScreenHeightDp();
+  public final float component1();
+  public final int component2();
+  public final float component3();
+  public final float component4();
+  public final int component5();
+  public final int component6();
+  public final cn.jingzhuan.adapt.autosize.TargetMetrics copy(float, int, float, float, int, int);
+  public static cn.jingzhuan.adapt.autosize.TargetMetrics copy$default(cn.jingzhuan.adapt.autosize.TargetMetrics, float, int, float, float, int, int, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+public final class cn.jingzhuan.adapt.autosize.WindowInfo {
+  public cn.jingzhuan.adapt.autosize.WindowInfo(int, int, int, int, int, int, int, int, boolean, boolean);
+  public final int getWidthPx();
+  public final int getHeightPx();
+  public final int getRealWidthPx();
+  public final int getRealHeightPx();
+  public final int getStatusBarInsetPx();
+  public final int getNavigationBarInsetPx();
+  public final int getConfigurationOrientation();
+  public final int getRequestedOrientation();
+  public final boolean getInMultiWindow();
+  public final boolean getStable();
+  public final int component1();
+  public final int component2();
+  public final int component3();
+  public final int component4();
+  public final int component5();
+  public final int component6();
+  public final int component7();
+  public final int component8();
+  public final boolean component9();
+  public final boolean component10();
+  public final cn.jingzhuan.adapt.autosize.WindowInfo copy(int, int, int, int, int, int, int, int, boolean, boolean);
+  public static cn.jingzhuan.adapt.autosize.WindowInfo copy$default(cn.jingzhuan.adapt.autosize.WindowInfo, int, int, int, int, int, int, int, int, boolean, boolean, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestAdaptActivity"
+            android:exported="false" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestCustomAdaptActivity"
+            android:exported="false" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestCancelAdaptActivity"
+            android:exported="false" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestNativeConfigChangesActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|fontScale"
+            android:exported="false" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestPortraitConfigActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestLandscapeActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestFragmentHostActivity"
+            android:exported="false" />
+    </application>
+</manifest>
