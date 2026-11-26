@@ -22,7 +22,7 @@ fun configuredValue(propertyName: String, envName: String, fallback: String): St
     return fallback
 }
 
-val publishedGroupId = configuredValue("publishedGroupId", "PUBLISHED_GROUP_ID", "io.github.donglua.autosize")
+val publishedGroupId = configuredValue("publishedGroupId", "PUBLISHED_GROUP_ID", "io.github.donglua.adapt")
 val publishedArtifactId = configuredValue("publishedArtifactId", "PUBLISHED_ARTIFACT_ID", "autosize")
 val publishedVersion = configuredValue(
     "publishedVersion",
