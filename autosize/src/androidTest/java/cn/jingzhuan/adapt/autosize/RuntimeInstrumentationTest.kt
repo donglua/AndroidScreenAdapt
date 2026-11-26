@@ -541,6 +541,42 @@ class RuntimeInstrumentationTest {
         }
     }
 
+    @Test
+    fun TR17_explicitApplyAndApplyNativeSurviveStopAndStartLifecycle() {
+        val nativeDensity = app.resources.displayMetrics.density
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ScreenAdapt.init(app) {
+                designSize(360f, 640f)
+            }
+        }
+
+        ActivityScenario.launch(TestAdaptActivity::class.java).use { scenario ->
+            var expectedExplicit = 0f
+            scenario.onActivity { activity ->
+                val info = ScreenAdapt.getWindowInfo(activity)!!
+                expectedExplicit = info.widthPx / 500f
+                ScreenAdapt.apply(activity, AdaptDirective.Width(500f))
+                assertEquals(expectedExplicit, activity.resources.displayMetrics.density, 1e-4f)
+            }
+
+            // Stopping and restarting must preserve explicit ScreenAdapt.apply directive
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            scenario.onActivity { activity ->
+                assertEquals(expectedExplicit, activity.resources.displayMetrics.density, 1e-4f)
+                ScreenAdapt.applyNative(activity)
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+            }
+
+            // Stopping and restarting must also preserve explicit ScreenAdapt.applyNative
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            scenario.onActivity { activity ->
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+            }
+        }
+    }
+
     private var currentActivityDensitySnapshotProvider: (() -> Float)? = null
     private val currentActivityDensitySnapshot: Float?
         get() = currentActivityDensitySnapshotProvider?.invoke()

@@ -155,7 +155,7 @@ internal object ScreenAdaptEngine {
         if (!initialized || Looper.myLooper() != Looper.getMainLooper()) return
         val session = getOrCreateSession(activity)
         if (session.isAdapting) return
-        applyNativeInternal(activity, session)
+        applyNativeInternal(activity, session, isExplicit = true)
     }
 
     fun reapply(activity: Activity) {
@@ -329,8 +329,7 @@ internal object ScreenAdaptEngine {
         val session = getOrCreateSession(activity)
         refreshWindow(activity, session)
         attachLayoutWatcher(activity, session)
-        val target = activeFragmentTarget(session) ?: activity
-        resolveAndApply(target = target, activity = activity, session = session, forceOnConflict = false)
+        reapplySession(activity, session, forceOnConflict = false)
     }
 
     private fun onActivityResumedInternal(activity: Activity) {
@@ -402,9 +401,15 @@ internal object ScreenAdaptEngine {
         forceOnConflict: Boolean
     ) {
         if (session.isAdapting || session.isResolvingDirective) return
-        val explicitSpec = session.lastExplicitSpec
-        if (explicitSpec != null) {
-            applySpec(activity, session, explicitSpec, forceOnConflict)
+        val explicitDirective = session.lastExplicitDirective
+        if (explicitDirective != null) {
+            applyResolvedDirective(
+                activity = activity,
+                session = session,
+                directive = explicitDirective,
+                isExplicit = true,
+                forceOnConflict = forceOnConflict
+            )
             return
         }
         val target = activeFragmentTarget(session) ?: activity
@@ -476,6 +481,7 @@ internal object ScreenAdaptEngine {
         isExplicit: Boolean,
         forceOnConflict: Boolean
     ) {
+        session.lastExplicitDirective = if (isExplicit) directive else null
         when (directive) {
             is AdaptDirective.Skip -> {
                 session.isSkipped = true
@@ -484,7 +490,7 @@ internal object ScreenAdaptEngine {
             }
 
             is AdaptDirective.Native -> {
-                applyNativeInternal(activity, session)
+                applyNativeInternal(activity, session, isExplicit = isExplicit)
             }
 
             is AdaptDirective.Width,
@@ -493,17 +499,16 @@ internal object ScreenAdaptEngine {
                 session.isSkipped = false
                 session.isNativeMode = false
                 val spec = specFromDirective(directive) ?: return
-                if (isExplicit) {
-                    session.lastExplicitSpec = spec
-                } else {
-                    session.lastExplicitSpec = null
-                }
                 applySpec(activity, session, spec, forceOnConflict)
             }
         }
     }
 
-    private fun applyNativeInternal(activity: Activity, session: ActivitySession) {
+    private fun applyNativeInternal(
+        activity: Activity,
+        session: ActivitySession,
+        isExplicit: Boolean = false
+    ) {
         if (session.isAdapting) return
         session.isAdapting = true
         try {
@@ -512,7 +517,9 @@ internal object ScreenAdaptEngine {
             session.isSkipped = false
             session.isDeferred = false
             session.resumeFallbackPending = false
-            session.lastExplicitSpec = null
+            if (isExplicit) {
+                session.lastExplicitDirective = AdaptDirective.Native
+            }
             session.lastAppliedInput = null
             session.lastAppliedResult = null
 

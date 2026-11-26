@@ -2,6 +2,7 @@ package cn.jingzhuan.adapt.autosize.engine
 
 import android.app.Activity
 import android.view.ViewTreeObserver
+import cn.jingzhuan.adapt.autosize.AdaptDirective
 import cn.jingzhuan.adapt.autosize.AdaptEvent
 import cn.jingzhuan.adapt.autosize.AdaptEventListener
 import cn.jingzhuan.adapt.autosize.WindowInfo
@@ -26,7 +27,7 @@ internal class ActivitySession(
 
     var cachedBounds: WindowBounds? = null
     var cachedWindowInfo: WindowInfo? = null
-    var lastExplicitSpec: AdaptSpec? = null
+    var lastExplicitDirective: AdaptDirective? = null
     var lastAppliedInput: AdaptInput? = null
     var lastAppliedResult: MetricsResult? = null
 
@@ -85,6 +86,6 @@ internal class ActivitySession(
         listeners.clear()
         lastAppliedInput = null
         lastAppliedResult = null
-        lastExplicitSpec = null
+        lastExplicitDirective = null
     }
 }
