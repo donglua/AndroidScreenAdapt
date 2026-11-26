@@ -327,6 +327,6 @@ class AdaptCalculatorTest {
         )
         assertEquals(AdaptStatus.APPLIED, fallback.status)
         assertEquals("deferred_fallback", fallback.reason)
-        assertEquals(2400f / 360f, fallback.target!!.density, 1e-6f)
+        assertEquals(1080f / 360f, fallback.target!!.density, 1e-6f)
     }
 }

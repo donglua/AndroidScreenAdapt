@@ -577,6 +577,66 @@ class RuntimeInstrumentationTest {
         }
     }
 
+    @Test
+    fun TR18_ensureAppliedRefreshesWindowOnConfigChangesWithoutStaleHighDensity() {
+        val landscapeBounds = WindowBounds(
+            widthPx = 2400,
+            heightPx = 1080,
+            realWidthPx = 2400,
+            realHeightPx = 1080,
+            orientation = CoreOrientation.LANDSCAPE
+        )
+        val portraitBounds = WindowBounds(
+            widthPx = 1080,
+            heightPx = 2400,
+            realWidthPx = 1080,
+            realHeightPx = 2400,
+            orientation = CoreOrientation.PORTRAIT
+        )
+        var currentBounds = landscapeBounds
+        WindowBoundsResolver.resolveCurrentWindowOverrideForTesting = { _ ->
+            currentBounds to WindowInfo(
+                widthPx = currentBounds.widthPx,
+                heightPx = currentBounds.heightPx,
+                realWidthPx = currentBounds.realWidthPx,
+                realHeightPx = currentBounds.realHeightPx,
+                statusBarInsetPx = 0,
+                navigationBarInsetPx = 0,
+                configurationOrientation = if (currentBounds.orientation == CoreOrientation.LANDSCAPE) {
+                    Configuration.ORIENTATION_LANDSCAPE
+                } else {
+                    Configuration.ORIENTATION_PORTRAIT
+                },
+                requestedOrientation = -1,
+                inMultiWindow = false,
+                stable = true
+            )
+        }
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ScreenAdapt.init(app) {
+                designSize(400f, 640f)
+                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
+            }
+        }
+
+        ActivityScenario.launch(TestAdaptActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                assertEquals(2400f / 400f, activity.resources.displayMetrics.density, 1e-4f)
+
+                // Simulate configChanges rotation while staying RESUMED (no onResume, no OnGlobalLayout yet):
+                // Android resets DisplayMetrics to native 3.0f and updates configuration before onMeasure.
+                currentBounds = portraitBounds
+                activity.resources.configuration.orientation = Configuration.ORIENTATION_PORTRAIT
+                activity.resources.displayMetrics.density = 3.0f
+
+                // Calling ensureApplied inside getResources() must refresh window and apply 2.7f, NOT stale 6.0f.
+                ScreenAdapt.ensureApplied(activity)
+                assertEquals(1080f / 400f, activity.resources.displayMetrics.density, 1e-4f)
+            }
+        }
+    }
+
     private var currentActivityDensitySnapshotProvider: (() -> Float)? = null
     private val currentActivityDensitySnapshot: Float?
         get() = currentActivityDensitySnapshotProvider?.invoke()

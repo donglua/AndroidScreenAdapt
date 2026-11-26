@@ -1,5 +1,6 @@
 package cn.jingzhuan.adapt.autosize.core
 
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -61,7 +62,13 @@ object AdaptCalculator {
             return MetricsResult(status = AdaptStatus.INVALID, reason = "invalid_design_size")
         }
 
-        val basePx = resolveBasePx(spec, bounds, availableWidthPx, availableHeightPx)
+        val basePx = resolveBasePx(
+            spec = spec,
+            bounds = bounds,
+            availableWidthPx = availableWidthPx,
+            availableHeightPx = availableHeightPx,
+            normalizeConflictingOrientation = conflictApplied
+        )
         if (!isValidPositiveFloat(basePx)) {
             return MetricsResult(status = AdaptStatus.INVALID, reason = "invalid_base_px")
         }
@@ -71,9 +78,28 @@ object AdaptCalculator {
             return MetricsResult(status = AdaptStatus.INVALID, reason = "invalid_target_density")
         }
 
+        val normalizedWidthPx = if (conflictApplied) {
+            when (bounds.orientation) {
+                CoreOrientation.PORTRAIT -> min(availableWidthPx, availableHeightPx)
+                CoreOrientation.LANDSCAPE -> max(availableWidthPx, availableHeightPx)
+                CoreOrientation.UNSPECIFIED -> availableWidthPx
+            }
+        } else {
+            availableWidthPx
+        }
+        val normalizedHeightPx = if (conflictApplied) {
+            when (bounds.orientation) {
+                CoreOrientation.PORTRAIT -> max(availableWidthPx, availableHeightPx)
+                CoreOrientation.LANDSCAPE -> min(availableWidthPx, availableHeightPx)
+                CoreOrientation.UNSPECIFIED -> availableHeightPx
+            }
+        } else {
+            availableHeightPx
+        }
+
         val targetDensityDpi = (targetDensity * DENSITY_DEFAULT).toInt()
-        val targetScreenWidthDp = (availableWidthPx / targetDensity).toInt()
-        val targetScreenHeightDp = (availableHeightPx / targetDensity).toInt()
+        val targetScreenWidthDp = (normalizedWidthPx / targetDensity).toInt()
+        val targetScreenHeightDp = (normalizedHeightPx / targetDensity).toInt()
         if (targetDensityDpi <= 0) {
             return MetricsResult(status = AdaptStatus.INVALID, reason = "invalid_target_density_dpi")
         }
@@ -180,13 +206,32 @@ object AdaptCalculator {
         spec: AdaptSpec,
         bounds: WindowBounds,
         availableWidthPx: Int,
-        availableHeightPx: Int
+        availableHeightPx: Int,
+        normalizeConflictingOrientation: Boolean
     ): Float {
+        val effectiveWidthPx = if (normalizeConflictingOrientation) {
+            when (bounds.orientation) {
+                CoreOrientation.PORTRAIT -> min(availableWidthPx, availableHeightPx)
+                CoreOrientation.LANDSCAPE -> max(availableWidthPx, availableHeightPx)
+                CoreOrientation.UNSPECIFIED -> availableWidthPx
+            }
+        } else {
+            availableWidthPx
+        }
+        val effectiveHeightPx = if (normalizeConflictingOrientation) {
+            when (bounds.orientation) {
+                CoreOrientation.PORTRAIT -> max(availableWidthPx, availableHeightPx)
+                CoreOrientation.LANDSCAPE -> min(availableWidthPx, availableHeightPx)
+                CoreOrientation.UNSPECIFIED -> availableHeightPx
+            }
+        } else {
+            availableHeightPx
+        }
         return when (spec.basis) {
-            CoreAdaptBasis.WIDTH -> availableWidthPx.toFloat()
-            CoreAdaptBasis.HEIGHT -> availableHeightPx.toFloat()
+            CoreAdaptBasis.WIDTH -> effectiveWidthPx.toFloat()
+            CoreAdaptBasis.HEIGHT -> effectiveHeightPx.toFloat()
             CoreAdaptBasis.SHORT_SIDE -> {
-                val windowShortSide = min(availableWidthPx, availableHeightPx)
+                val windowShortSide = min(effectiveWidthPx, effectiveHeightPx)
                 if (!spec.useRealDisplayShortSide || bounds.inMultiWindow) {
                     return windowShortSide.toFloat()
                 }

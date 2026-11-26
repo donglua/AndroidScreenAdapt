@@ -173,27 +173,33 @@ internal object ScreenAdaptEngine {
         if (creatingSessions.contains(activity)) return
         val session = sessions[activity]
         if (session == null) {
+            if (activity.window == null) return
             reapply(activity)
             return
         }
-        if (session.isAdapting || session.isResolvingWindow || session.isResolvingDirective ||
-            session.isSkipped || session.isDeferred
-        ) return
+        if (session.isAdapting || session.isResolvingWindow || session.isResolvingDirective) return
 
         var needsNative = false
         var needsReapply = false
+        var configChanged = false
         session.isAdapting = true
         try {
             val res = activity.resources
+            configChanged = session.hasConfigChanged(res.configuration)
+            if (!configChanged && (session.isSkipped || session.isDeferred)) {
+                return
+            }
             if (session.isNativeMode) {
                 val refreshedNative = refreshActivityNativeSnapshot(res, session)
-                needsNative = !MetricsApplier.matchesSnapshot(
+                needsNative = configChanged || !MetricsApplier.matchesSnapshot(
                     resources = res,
                     snapshot = refreshedNative,
                     checkDp = config.supportDp,
                     checkSp = config.supportSp,
                     checkScreenSizeDp = config.supportDp && config.supportScreenSizeDp
                 )
+            } else if (configChanged) {
+                needsReapply = true
             } else {
                 val lastResult = session.lastAppliedResult
                 if (lastResult != null && lastResult.status == AdaptStatus.APPLIED) {
@@ -206,9 +212,15 @@ internal object ScreenAdaptEngine {
             session.isAdapting = false
         }
 
+        if (configChanged) {
+            refreshWindow(activity, session)
+        }
         if (needsNative) {
             applyNativeInternal(activity, session)
         } else if (needsReapply) {
+            if (!configChanged) {
+                refreshWindow(activity, session)
+            }
             reapplySession(activity, session, forceOnConflict = false)
         }
     }
@@ -320,6 +332,7 @@ internal object ScreenAdaptEngine {
     private fun onActivityCreatedInternal(activity: Activity) {
         val session = getOrCreateSession(activity)
         fragmentHook?.registerIfNeeded(activity, session)
+        attachConfigWatcher(activity, session)
         refreshWindow(activity, session)
         attachLayoutWatcher(activity, session)
         resolveAndApply(target = activity, activity = activity, session = session, forceOnConflict = false)
@@ -327,6 +340,7 @@ internal object ScreenAdaptEngine {
 
     private fun onActivityStartedInternal(activity: Activity) {
         val session = getOrCreateSession(activity)
+        attachConfigWatcher(activity, session)
         refreshWindow(activity, session)
         attachLayoutWatcher(activity, session)
         reapplySession(activity, session, forceOnConflict = false)
@@ -486,6 +500,7 @@ internal object ScreenAdaptEngine {
             is AdaptDirective.Skip -> {
                 session.isSkipped = true
                 session.isDeferred = false
+                session.recordConfigSnapshot(activity.resources.configuration)
                 session.dispatchEvent(activity, AdaptEvent(AdaptEvent.Type.SKIPPED, 0f, "strategy_skip"))
             }
 
@@ -533,6 +548,7 @@ internal object ScreenAdaptEngine {
                 applySp = config.supportSp,
                 applyScreenSizeDp = config.supportDp && config.supportScreenSizeDp
             )
+            session.recordConfigSnapshot(activity.resources.configuration)
             session.dispatchEvent(
                 activity,
                 AdaptEvent(AdaptEvent.Type.NATIVE, currentNative.density, "native_mode")
@@ -604,6 +620,7 @@ internal object ScreenAdaptEngine {
                             result = lastResult
                         )
                     }
+                    session.recordConfigSnapshot(activity.resources.configuration)
                     session.dispatchEvent(
                         activity,
                         AdaptEvent(AdaptEvent.Type.SKIPPED, lastResult.target?.density ?: 0f, "dedup_matched")
@@ -616,6 +633,7 @@ internal object ScreenAdaptEngine {
                     syncApplication = canSyncApplication(activity, session),
                     result = lastResult
                 )
+                session.recordConfigSnapshot(activity.resources.configuration)
                 session.dispatchEvent(
                     activity,
                     AdaptEvent(AdaptEvent.Type.APPLIED, lastResult.target?.density ?: 0f, "drift_restored")
@@ -636,6 +654,7 @@ internal object ScreenAdaptEngine {
                         syncApplication = canSyncApplication(activity, session),
                         result = result
                     )
+                    session.recordConfigSnapshot(activity.resources.configuration)
                     val targetDensity = result.target?.density ?: 0f
                     AdaptLog.d(
                         "Adapted ${activity.javaClass.simpleName}: density=$targetDensity, " +
@@ -649,6 +668,7 @@ internal object ScreenAdaptEngine {
 
                 AdaptStatus.DEFERRED -> {
                     session.isDeferred = true
+                    session.recordConfigSnapshot(activity.resources.configuration)
                     AdaptLog.d("Deferred ${activity.javaClass.simpleName}: ${result.reason}")
                     session.dispatchEvent(
                         activity,
@@ -683,11 +703,21 @@ internal object ScreenAdaptEngine {
         }
     }
 
+    private fun attachConfigWatcher(activity: Activity, session: ActivitySession) {
+        session.attachComponentCallbacks(activity) {
+            val current = session.activityRef.get() ?: return@attachComponentCallbacks
+            if (current.isFinishing || current.isDestroyed || session.isAdapting) return@attachComponentCallbacks
+            refreshWindow(current, session)
+            reapplySession(current, session, forceOnConflict = false)
+        }
+    }
+
     private fun attachLayoutWatcher(activity: Activity, session: ActivitySession) {
         session.attachLayoutListener(activity) {
             val current = session.activityRef.get() ?: return@attachLayoutListener
             if (current.isFinishing || current.isDestroyed || session.isAdapting) return@attachLayoutListener
 
+            val beforeDensityBits = current.resources.displayMetrics.density.toRawBits()
             val prevBounds = session.cachedBounds
             refreshWindow(current, session)
             val newBounds = session.cachedBounds ?: return@attachLayoutListener
@@ -699,11 +729,17 @@ internal object ScreenAdaptEngine {
                     session.resumeFallbackPending = false
                     reapplySession(current, session, forceOnConflict = true)
                 }
+                if (current.resources.displayMetrics.density.toRawBits() != beforeDensityBits) {
+                    current.window?.decorView?.requestLayout()
+                }
                 return@attachLayoutListener
             }
 
             if (prevBounds != newBounds) {
                 reapplySession(current, session, forceOnConflict = false)
+                if (current.resources.displayMetrics.density.toRawBits() != beforeDensityBits) {
+                    current.window?.decorView?.requestLayout()
+                }
             } else if (!session.isNativeMode && !session.isSkipped) {
                 val lastResult = session.lastAppliedResult
                 if (lastResult != null && lastResult.status == AdaptStatus.APPLIED &&

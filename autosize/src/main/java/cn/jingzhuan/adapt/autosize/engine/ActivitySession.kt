@@ -1,6 +1,9 @@
 package cn.jingzhuan.adapt.autosize.engine
 
 import android.app.Activity
+import android.content.ComponentCallbacks
+import android.content.res.Configuration
+import android.os.Build
 import android.view.ViewTreeObserver
 import cn.jingzhuan.adapt.autosize.AdaptDirective
 import cn.jingzhuan.adapt.autosize.AdaptEvent
@@ -43,8 +46,54 @@ internal class ActivitySession(
     var isResolvingWindow: Boolean = false
     var isResolvingDirective: Boolean = false
 
+    private var hasConfigSnapshot: Boolean = false
+    private var lastConfigOrientation: Int = Configuration.ORIENTATION_UNDEFINED
+    private var lastConfigScreenWidthDp: Int = Configuration.SCREEN_WIDTH_DP_UNDEFINED
+    private var lastConfigScreenHeightDp: Int = Configuration.SCREEN_HEIGHT_DP_UNDEFINED
+    private var lastConfigSmallestScreenWidthDp: Int = Configuration.SMALLEST_SCREEN_WIDTH_DP_UNDEFINED
+    private var lastConfigDensityDpi: Int = Configuration.DENSITY_DPI_UNDEFINED
+    private var lastConfigFontScaleBits: Int = 0
+
     private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
     private var attachedViewTreeObserver: WeakReference<ViewTreeObserver>? = null
+    private var activityComponentCallbacks: ComponentCallbacks? = null
+
+    fun recordConfigSnapshot(config: Configuration) {
+        hasConfigSnapshot = true
+        lastConfigOrientation = config.orientation
+        lastConfigScreenWidthDp = config.screenWidthDp
+        lastConfigScreenHeightDp = config.screenHeightDp
+        lastConfigSmallestScreenWidthDp = config.smallestScreenWidthDp
+        lastConfigDensityDpi = config.densityDpi
+        lastConfigFontScaleBits = config.fontScale.toRawBits()
+    }
+
+    fun hasConfigChanged(config: Configuration): Boolean {
+        if (!hasConfigSnapshot) return false
+        return lastConfigOrientation != config.orientation ||
+            lastConfigScreenWidthDp != config.screenWidthDp ||
+            lastConfigScreenHeightDp != config.screenHeightDp ||
+            lastConfigSmallestScreenWidthDp != config.smallestScreenWidthDp ||
+            lastConfigDensityDpi != config.densityDpi ||
+            lastConfigFontScaleBits != config.fontScale.toRawBits()
+    }
+
+    fun attachComponentCallbacks(activity: Activity, onConfigChanged: (Configuration) -> Unit) {
+        if (activityComponentCallbacks != null) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val callbacks = object : ComponentCallbacks {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                onConfigChanged(newConfig)
+            }
+
+            override fun onLowMemory() = Unit
+        }
+        try {
+            activity.registerComponentCallbacks(callbacks)
+            activityComponentCallbacks = callbacks
+        } catch (_: Exception) {
+        }
+    }
 
     fun attachLayoutListener(activity: Activity, onLayout: () -> Unit) {
         if (globalLayoutListener != null) return
@@ -81,8 +130,17 @@ internal class ActivitySession(
                 }
             }
         }
+        val compCallbacks = activityComponentCallbacks
+        activityComponentCallbacks = null
+        if (compCallbacks != null && activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                activity.unregisterComponentCallbacks(compCallbacks)
+            } catch (_: Exception) {
+            }
+        }
         attachedViewTreeObserver = null
         activeFragmentOverrideRef = null
+        hasConfigSnapshot = false
         listeners.clear()
         lastAppliedInput = null
         lastAppliedResult = null
