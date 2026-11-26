@@ -1,5 +1,7 @@
 # API 文档
 
+中文 | [English](API.en.md)
+
 ## 1. 包与制品
 
 ```text

@@ -1,5 +1,7 @@
 # AndroidScreenAdapt
 
+中文 | [English](README.en.md)
+
 AndroidScreenAdapt 是一个面向现代 Android 工程的屏幕适配库（发布模块 `:autosize`，Maven 坐标 `io.github.donglua.adapt:autosize`），用于替代基于旧版 `AndroidAutoSize` 架构的屏幕适配方案。
 
 项目采用**「以当前 Window 的动态 `DisplayMetrics` 单引擎为基础 + 局部 `Context` / `LocalDensity` 隔离」**的混合架构：提供干净的 Kotlin-first API（同时兼容 Java 调用），内置当前窗口解析、原生模式、折叠屏短边适配、Android 14+ 非线性字体屏蔽与旋转竞态兜底。
