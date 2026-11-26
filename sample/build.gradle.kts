@@ -15,7 +15,7 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-alpha01"
+        versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testProguardFile("proguard-test-rules.pro")
     }

@@ -31,7 +31,7 @@ AndroidScreenAdapt 是一个面向现代 Android 工程的屏幕适配库（发�
 
 ```kotlin
 dependencies {
-    implementation("io.github.donglua.adapt:autosize:0.1.0-alpha01")
+    implementation("io.github.donglua.adapt:autosize:0.1.0")
 }
 ```
 
