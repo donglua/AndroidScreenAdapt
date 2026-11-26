@@ -895,11 +895,9 @@ internal object ScreenAdaptEngine {
     }
 
     private fun resolveDesiredContextFontScale(): Float? {
-        return when {
-            config.privateFontScale > 0f -> config.privateFontScale
-            config.excludeFontScale -> 1.0f
-            else -> null
-        }
+        // Lock Configuration.fontScale to 1.0f whenever excludeFontScale or privateFontScale is active
+        // so Android 14+ FontScaleConverter stays disabled and sp scales linearly via DisplayMetrics.scaledDensity.
+        return if (config.privateFontScale > 0f || config.excludeFontScale) 1.0f else null
     }
 
     private fun resolveDesignSizes(app: Application, adaptConfig: AdaptConfig) {

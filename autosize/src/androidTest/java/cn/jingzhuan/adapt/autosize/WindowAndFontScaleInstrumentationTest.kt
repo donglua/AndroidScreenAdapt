@@ -63,6 +63,28 @@ class WindowAndFontScaleInstrumentationTest {
     }
 
     @Test
+    fun TF02_privateFontScaleRemainsLinearOnApi34Plus() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ScreenAdapt.init(app) {
+                designSize(360f, 640f)
+                privateFontScale(1.5f)
+            }
+        }
+
+        val largeFontBase = app.createConfigurationContext(
+            Configuration(app.resources.configuration).apply { fontScale = 2.0f }
+        )
+        val wrapped = ScreenAdapt.wrapContext(largeFontBase)
+        assertEquals(1.0f, wrapped.resources.configuration.fontScale, 0f)
+
+        val dm = wrapped.resources.displayMetrics
+        dm.density = 3.0f
+        dm.scaledDensity = 4.5f
+        val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16f, dm)
+        assertEquals(72.0f, px, 0.5f)
+    }
+
+    @Test
     fun TW01_screenMetricsConsistentWithoutInit() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdaptEngine.resetForTesting()
