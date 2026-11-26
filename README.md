@@ -90,6 +90,49 @@ class ComposePageActivity : ComponentActivity(), NoAdapt {
 }
 ```
 
+### 4. 多形态设备配置（折叠屏 / 阔直板 / 平板 / 横屏）
+
+底层已按当前 `Window` 实时计算并自动监听窗口变化（折叠展开、分屏拖拽、横竖屏切换），但大屏与异形比例的**设计稿宽度或是否退回原生**需要结合业务需求在 `strategy` 中指定。引擎在回调 `strategy` 前已刷新当前窗口信息，可直接安全读取 `ScreenAdapt.getWindowInfo(activity)` 与 `activity.resources.configuration`：
+
+```kotlin
+ScreenAdapt.init(this) {
+    designSize(360f, 640f)
+    excludeFontScale(true)
+    strategy { _, activity ->
+        val info = ScreenAdapt.getWindowInfo(activity) ?: return@strategy null
+        val swDp = activity.resources.configuration.smallestScreenWidthDp
+        val shortPx = minOf(info.widthPx, info.heightPx)
+        val longPx = maxOf(info.widthPx, info.heightPx)
+        val aspectRatio = if (longPx > 0) shortPx.toFloat() / longPx else 0f
+
+        when {
+            // 1. 分屏 / 自由窗口：按当前窗口宽度适配（或返回 ShortSide 自动取窗口短边）
+            info.inMultiWindow -> AdaptDirective.Width(360f)
+
+            // 2. 折叠屏展开态（接近方形内屏）：扩大设计宽度，避免 360dp 等比过度放大
+            aspectRatio >= 0.8f -> AdaptDirective.Width(720f)
+
+            // 3. 平板：按大屏设计稿适配，或返回 AdaptDirective.Native 走原生响应式布局
+            swDp >= 600 -> AdaptDirective.Native
+
+            // 4. 阔直板等宽屏手机（如 16:10 / 宽比例直板机）：适当放宽设计宽度以展示更多内容
+            swDp >= 450 || aspectRatio >= 0.6f -> AdaptDirective.Width(420f)
+
+            // 5. 普通手机横屏：按真实短边适配，保持与竖屏一致的控件/字号尺度
+            info.configurationOrientation == Configuration.ORIENTATION_LANDSCAPE ->
+                AdaptDirective.ShortSide(360f, useRealDisplay = true)
+
+            // 6. 其余普通手机竖屏：回退全局 designSize(360f, 640f)
+            else -> null
+        }
+    }
+}
+```
+
+> **提示**：
+> - 以上阈值（`0.8f`、`600dp`、`450dp`、`720f`/`420f`）仅为参考，请结合自身 UI 设计稿调整；若希望平板整机完全不启用适配，也可在 `Application#onCreate` 判断条件后直接跳过 `ScreenAdapt.init(...)`（`ScreenMetrics` 仍可安全调用）。
+> - 若希望折叠屏展开/折叠或横竖屏切换时 **不重建 `Activity`**，在 `AndroidManifest.xml` 中为对应页面配置 `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"`，引擎会在配置与布局变更时自动按新窗口重算密度。
+
 完整接口签名、配置项、指令模型与 `ScreenMetrics` 工具说明见 [API 文档](docs/API.md)。
 
 ## 工程模块与验证

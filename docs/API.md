@@ -137,6 +137,22 @@ interface AdaptTarget { fun adaptDirective(): AdaptDirective }
 fun interface AdaptStrategy { fun resolve(target: Any, activity: Activity): AdaptDirective? }
 ```
 
+各 `AdaptDirective` 语义与适用场景：
+
+| 指令 | 含义 | 常见用途 |
+| :--- | :--- | :--- |
+| `AdaptDirective.Width(sizeDp)` | 以当前窗口可用宽度为基准计算 `density = widthPx / sizeDp` | 常规竖屏页、折叠屏展开态扩宽设计稿（如 `720f`）、阔直板调宽设计稿 |
+| `AdaptDirective.Height(sizeDp)` | 以当前窗口可用高度为基准计算 `density = heightPx / sizeDp` | 强依赖纵向满屏比例的页面 |
+| `AdaptDirective.ShortSide(effectiveSizeDp, useRealDisplay = true)` | 以短边为基准计算密度；当 `useRealDisplay = true` 且处于全屏时取物理短边，**若处于分屏/多窗口或窗口短边小于物理短边的 `85%` 时自动回退为当前窗口短边** | 横屏页（保持与竖屏一致的视觉尺度）、大屏与分屏兼容 |
+| `AdaptDirective.Native` | 恢复当前 `Activity` 自身原生快照，绝不写入 `Application` | 平板/大屏原生响应式页面、不需要缩放的登录/媒体/Compose 页面 |
+| `AdaptDirective.Skip` | 跳过本次适配，保持当前状态不变 | 特殊过渡页或由业务自行接管密度的场景 |
+
+> **`AdaptStrategy` 与多形态设备动态切换说明**
+>
+> - 引擎在调用 `AdaptStrategy.resolve(target, activity)` 之前已完成当前 `WindowInfo` 刷新，策略内可直接安全调用 `ScreenAdapt.getWindowInfo(activity)` 与读取 `activity.resources.configuration`（`smallestScreenWidthDp` 不会被本库修改，始终反映系统原生短边 dp）。
+> - 折叠屏展开/折叠、阔直板旋转、分屏/自由窗口拖拽时，引擎会通过 `ComponentCallbacks.onConfigurationChanged`（API 29+）与 `OnGlobalLayout` 自动刷新窗口并重新执行 `AdaptStrategy`；不重建 `Activity` 的页面需在 `AndroidManifest.xml` 中声明 `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"`。
+> - `AdaptStrategy` 返回 `null` 时回退全局 `designWidthDp` / `designHeightDp` 与 `basis`。
+
 > **原生模式边界约束（`Native` / `NoAdapt` / `cancelTargets` / `applyNative`）**
 >
 > 1. **只恢复目标 `Activity`，绝不回写 `Application`**：进入原生模式页面后，`Application.resources.displayMetrics` 会**保留上一次已适配页面写入的共享密度**。
