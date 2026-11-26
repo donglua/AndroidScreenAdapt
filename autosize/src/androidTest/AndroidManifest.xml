@@ -27,5 +27,8 @@
         <activity
             android:name="cn.jingzhuan.adapt.autosize.TestFragmentHostActivity"
             android:exported="false" />
+        <activity
+            android:name="cn.jingzhuan.adapt.autosize.TestNoAdaptFragmentHostActivity"
+            android:exported="false" />
     </application>
 </manifest>

@@ -405,7 +405,9 @@ internal object ScreenAdaptEngine {
         forceOnConflict: Boolean
     ) {
         if (session.isAdapting || session.isResolvingDirective) return
-        val directive = resolveExplicitDirectiveSafely(target, activity, session) ?: defaultGlobalDirective()
+        val directive = resolveExplicitDirectiveSafely(target, activity, session)
+            ?: (if (target !== activity) resolveExplicitDirectiveSafely(activity, activity, session) else null)
+            ?: defaultGlobalDirective()
         applyResolvedDirective(activity, session, directive, isExplicit = false, forceOnConflict = forceOnConflict)
     }
 
@@ -474,6 +476,9 @@ internal object ScreenAdaptEngine {
                 },
                 applyFragmentTarget = { fragment, host, session ->
                     resolveAndApply(target = fragment, activity = host, session = session, forceOnConflict = false)
+                },
+                reapplyHost = { host, session ->
+                    reapplySession(host, session, forceOnConflict = false)
                 }
             )
         } catch (_: Throwable) {

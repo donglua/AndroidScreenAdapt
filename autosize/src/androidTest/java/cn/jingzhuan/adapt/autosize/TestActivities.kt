@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
 import android.os.Bundle
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
@@ -56,3 +57,9 @@ class TestFragmentHostActivity : FragmentActivity() {
 class TestCustomFragment : Fragment(), AdaptTarget {
     override fun adaptDirective(): AdaptDirective = AdaptDirective.Width(450f)
 }
+
+class TestPlainFragment : Fragment()
+
+class TestNoAdaptDialogFragment : DialogFragment(), NoAdapt
+
+class TestNoAdaptFragmentHostActivity : FragmentActivity(), NoAdapt

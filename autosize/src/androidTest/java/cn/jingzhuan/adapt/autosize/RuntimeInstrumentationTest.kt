@@ -637,6 +637,56 @@ class RuntimeInstrumentationTest {
         }
     }
 
+    @Test
+    fun TR19_fragmentFallbackPreservesNoAdaptHostAndDialogDismissRestoresHost() {
+        val nativeDensity = app.resources.displayMetrics.density
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ScreenAdapt.init(app) {
+                designSize(360f, 640f)
+                customFragment(true)
+            }
+        }
+
+        // 1. Plain fragment & headless fragment inside NoAdapt host must NOT overwrite host to 360dp
+        ActivityScenario.launch(TestNoAdaptFragmentHostActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+
+                activity.supportFragmentManager.beginTransaction()
+                    .add(TestPlainFragment(), "headless")
+                    .commitNow()
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+
+                activity.supportFragmentManager.beginTransaction()
+                    .add(android.R.id.content, TestPlainFragment(), "content")
+                    .commitNow()
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+            }
+        }
+
+        // 2. NoAdapt DialogFragment switches host to native, and destroying/dismissing it restores host density
+        ActivityScenario.launch(TestFragmentHostActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val info = ScreenAdapt.getWindowInfo(activity)!!
+                val hostDefaultDensity = info.widthPx / 360f
+
+                // Replace custom fragment with plain fragment so host is at 360dp
+                activity.supportFragmentManager.beginTransaction()
+                    .replace(android.R.id.content, TestPlainFragment(), "plain")
+                    .commitNow()
+                assertEquals(hostDefaultDensity, activity.resources.displayMetrics.density, 1e-4f)
+
+                val dialog = TestNoAdaptDialogFragment()
+                dialog.showNow(activity.supportFragmentManager, "no_adapt_dialog")
+                assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-3f)
+
+                dialog.dismiss()
+                activity.supportFragmentManager.executePendingTransactions()
+                assertEquals(hostDefaultDensity, activity.resources.displayMetrics.density, 1e-4f)
+            }
+        }
+    }
+
     private var currentActivityDensitySnapshotProvider: (() -> Float)? = null
     private val currentActivityDensitySnapshot: Float?
         get() = currentActivityDensitySnapshotProvider?.invoke()
