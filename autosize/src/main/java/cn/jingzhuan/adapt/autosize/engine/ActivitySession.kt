@@ -23,12 +23,15 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 internal class ActivitySession(
     activity: Activity,
+    @Volatile
     var nativeSnapshot: MetricsSnapshot
 ) {
     val activityRef = WeakReference(activity)
     val listeners = CopyOnWriteArrayList<AdaptEventListener>()
 
+    @Volatile
     var cachedBounds: WindowBounds? = null
+    @Volatile
     var cachedWindowInfo: WindowInfo? = null
     var lastExplicitDirective: AdaptDirective? = null
     var lastAppliedInput: AdaptInput? = null

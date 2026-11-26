@@ -41,6 +41,7 @@ internal object ScreenAdaptEngine {
     private const val DEFAULT_DESIGN_WIDTH_DP = 360f
     private const val DEFAULT_DESIGN_HEIGHT_DP = 640f
 
+    private val sessionLock = Any()
     private val sessions = WeakHashMap<Activity, ActivitySession>()
     private val resumedActivities = Collections.newSetFromMap(WeakHashMap<Activity, Boolean>())
     private val creatingSessions = Collections.newSetFromMap(IdentityHashMap<Activity, Boolean>())
@@ -103,7 +104,9 @@ internal object ScreenAdaptEngine {
             }
 
             override fun onActivityPaused(activity: Activity) {
-                resumedActivities.remove(activity)
+                synchronized(sessionLock) {
+                    resumedActivities.remove(activity)
+                }
             }
 
             override fun onActivityStopped(activity: Activity) = Unit
@@ -170,8 +173,8 @@ internal object ScreenAdaptEngine {
     fun ensureApplied(activity: Activity) {
         if (!initialized || Looper.myLooper() != Looper.getMainLooper()) return
         if (activity.isFinishing || activity.isDestroyed) return
-        if (creatingSessions.contains(activity)) return
-        val session = sessions[activity]
+        if (synchronized(sessionLock) { creatingSessions.contains(activity) }) return
+        val session = findSession(activity)
         if (session == null) {
             if (activity.window == null) return
             reapply(activity)
@@ -228,7 +231,7 @@ internal object ScreenAdaptEngine {
     fun resolveTargetMetrics(context: Context, directive: AdaptDirective?): TargetMetrics? {
         val app = application
         val bounds = if (context is Activity) {
-            sessions[context]?.cachedBounds ?: WindowBoundsResolver.resolveCurrentWindow(context).first
+            findSession(context)?.cachedBounds ?: WindowBoundsResolver.resolveCurrentWindow(context).first
         } else {
             WindowBoundsResolver.resolveForContext(context)
         }
@@ -239,7 +242,7 @@ internal object ScreenAdaptEngine {
                 MetricsSnapshot(dm.density, dm.densityDpi, dm.scaledDensity)
             }
         val nativeSnapshot = if (context is Activity) {
-            sessions[context]?.let { computeActivityNativeSnapshot(context.resources, it) }
+            findSession(context)?.let { computeActivityNativeSnapshot(context.resources, it) }
                 ?: MetricsSnapshotReader.captureActivityNative(context, baseline)
         } else {
             MetricsSnapshotReader.updateForConfiguration(baseline, context.resources.configuration, baseline)
@@ -275,19 +278,27 @@ internal object ScreenAdaptEngine {
 
     fun getWindowInfo(activity: Activity): WindowInfo? {
         if (!initialized) return null
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            return findSession(activity)?.cachedWindowInfo
+        }
         val session = getOrCreateSession(activity)
-        if (session.cachedWindowInfo == null && Looper.myLooper() == Looper.getMainLooper()) {
+        if (session.cachedWindowInfo == null) {
             refreshWindow(activity, session)
         }
         return session.cachedWindowInfo
     }
 
     fun addListener(activity: Activity, listener: AdaptEventListener) {
-        getOrCreateSession(activity).listeners.addIfAbsent(listener)
+        val session = if (Looper.myLooper() == Looper.getMainLooper()) {
+            getOrCreateSession(activity)
+        } else {
+            findSession(activity) ?: return
+        }
+        session.listeners.addIfAbsent(listener)
     }
 
     fun removeListener(activity: Activity, listener: AdaptEventListener) {
-        sessions[activity]?.listeners?.remove(listener)
+        findSession(activity)?.listeners?.remove(listener)
     }
 
     internal fun resetForTesting() {
@@ -308,10 +319,14 @@ internal object ScreenAdaptEngine {
             componentCallbacks?.let { app.unregisterComponentCallbacks(it) }
             activityCallbacks?.let { app.unregisterActivityLifecycleCallbacks(it) }
         }
-        sessions.values.forEach { it.dispose(it.activityRef.get()) }
-        sessions.clear()
-        resumedActivities.clear()
-        creatingSessions.clear()
+        val existingSessions = synchronized(sessionLock) {
+            val copy = sessions.values.toList()
+            sessions.clear()
+            resumedActivities.clear()
+            creatingSessions.clear()
+            copy
+        }
+        existingSessions.forEach { it.dispose(it.activityRef.get()) }
         initialized = false
         application = null
         config = AdaptConfig()
@@ -327,7 +342,7 @@ internal object ScreenAdaptEngine {
 
     internal fun getOrCreateSessionForBridge(activity: Activity): ActivitySession = getOrCreateSession(activity)
 
-    internal fun getSessionForBridge(activity: Activity): ActivitySession? = sessions[activity]
+    internal fun getSessionForBridge(activity: Activity): ActivitySession? = findSession(activity)
 
     private fun onActivityCreatedInternal(activity: Activity) {
         val session = getOrCreateSession(activity)
@@ -347,7 +362,9 @@ internal object ScreenAdaptEngine {
     }
 
     private fun onActivityResumedInternal(activity: Activity) {
-        resumedActivities.add(activity)
+        synchronized(sessionLock) {
+            resumedActivities.add(activity)
+        }
         val session = getOrCreateSession(activity)
         session.resumedOnce = true
 
@@ -394,8 +411,11 @@ internal object ScreenAdaptEngine {
     }
 
     private fun onActivityDestroyedInternal(activity: Activity) {
-        resumedActivities.remove(activity)
-        sessions.remove(activity)?.dispose(activity)
+        val removed = synchronized(sessionLock) {
+            resumedActivities.remove(activity)
+            sessions.remove(activity)
+        }
+        removed?.dispose(activity)
     }
 
     private fun resolveAndApply(
@@ -768,9 +788,14 @@ internal object ScreenAdaptEngine {
         }
     }
 
+    private fun findSession(activity: Activity): ActivitySession? {
+        return synchronized(sessionLock) { sessions[activity] }
+    }
+
     private fun getOrCreateSession(activity: Activity): ActivitySession {
-        sessions[activity]?.let { return it }
-        if (!creatingSessions.add(activity)) {
+        findSession(activity)?.let { return it }
+        val added = synchronized(sessionLock) { creatingSessions.add(activity) }
+        if (!added) {
             val fallback = appNativeSnapshot ?: MetricsSnapshot(1f, 160, 1f)
             return ActivitySession(activity, fallback)
         }
@@ -783,10 +808,12 @@ internal object ScreenAdaptEngine {
             }
             MetricsSnapshotReader.captureActivityNative(activity, baseline)
         } finally {
-            creatingSessions.remove(activity)
+            synchronized(sessionLock) { creatingSessions.remove(activity) }
         }
-        return ActivitySession(activity, nativeSnapshot).also {
-            sessions[activity] = it
+        return synchronized(sessionLock) {
+            sessions[activity] ?: ActivitySession(activity, nativeSnapshot).also {
+                sessions[activity] = it
+            }
         }
     }
 
@@ -806,8 +833,10 @@ internal object ScreenAdaptEngine {
                     false
                 }
                 if (inMultiWindow) return false
-                if (resumedActivities.contains(activity)) return true
-                !session.resumedOnce && resumedActivities.none { it !== activity }
+                synchronized(sessionLock) {
+                    if (resumedActivities.contains(activity)) return true
+                    !session.resumedOnce && resumedActivities.none { it !== activity }
+                }
             }
         }
     }
