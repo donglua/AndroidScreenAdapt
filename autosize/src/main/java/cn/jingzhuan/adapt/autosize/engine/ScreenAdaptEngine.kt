@@ -230,8 +230,9 @@ internal object ScreenAdaptEngine {
 
     fun resolveTargetMetrics(context: Context, directive: AdaptDirective?): TargetMetrics? {
         val app = application
-        val bounds = if (context is Activity) {
-            findSession(context)?.cachedBounds ?: WindowBoundsResolver.resolveCurrentWindow(context).first
+        val activity = WindowBoundsResolver.findActivity(context)
+        val bounds = if (activity != null) {
+            findSession(activity)?.cachedBounds ?: WindowBoundsResolver.resolveCurrentWindow(activity).first
         } else {
             WindowBoundsResolver.resolveForContext(context)
         }
@@ -241,9 +242,9 @@ internal object ScreenAdaptEngine {
                 val dm = context.resources.displayMetrics
                 MetricsSnapshot(dm.density, dm.densityDpi, dm.scaledDensity)
             }
-        val nativeSnapshot = if (context is Activity) {
-            findSession(context)?.let { computeActivityNativeSnapshot(context.resources, it) }
-                ?: MetricsSnapshotReader.captureActivityNative(context, baseline)
+        val nativeSnapshot = if (activity != null) {
+            findSession(activity)?.let { computeActivityNativeSnapshot(activity.resources, it) }
+                ?: MetricsSnapshotReader.captureActivityNative(activity, baseline)
         } else {
             MetricsSnapshotReader.updateForConfiguration(baseline, context.resources.configuration, baseline)
         }

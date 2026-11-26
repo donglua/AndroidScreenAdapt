@@ -2,6 +2,7 @@ package cn.jingzhuan.adapt.autosize.engine
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Rect
 import android.os.Build
 import android.util.DisplayMetrics
@@ -23,10 +24,21 @@ internal object WindowBoundsResolver {
     @Volatile
     internal var resolveCurrentWindowOverrideForTesting: ((Activity) -> Pair<WindowBounds, WindowInfo>)? = null
 
-    fun resolveForContext(context: Context): WindowBounds {
-        if (context is Activity) {
-            return resolveCurrentWindow(context).first
+    internal fun findActivity(context: Context?): Activity? {
+        var current = context
+        var depth = 0
+        while (current is ContextWrapper && depth < 16) {
+            if (current is Activity) return current
+            val next = current.baseContext
+            if (next === current) break
+            current = next
+            depth++
         }
+        return current as? Activity
+    }
+
+    fun resolveForContext(context: Context): WindowBounds {
+        findActivity(context)?.let { return resolveCurrentWindow(it).first }
         val windowSize = ScreenMetrics.getWindowSize(context)
         val realSize = ScreenMetrics.getRealDisplaySize(context)
         val statusBar = ScreenMetrics.getStatusBarHeight(context)
@@ -81,7 +93,7 @@ internal object WindowBoundsResolver {
 
                 widthPx = (bounds.width() - navAndCutout.left - navAndCutout.right).coerceAtLeast(0)
                 heightPx = (bounds.height() - navAndCutout.bottom).coerceAtLeast(0)
-                statusInsetPx = max(0, statusTop - bounds.top).coerceAtMost(heightPx)
+                statusInsetPx = statusTop.coerceIn(0, heightPx)
                 navInsetPx = navAndCutout.bottom
             }
         }
