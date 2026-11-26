@@ -6,10 +6,15 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 plugins {
     alias(libs.plugins.android.library)
     `maven-publish`
+    signing
 }
 
 group = "cn.jingzhuan.adapt"
-version = "0.1.0-alpha01"
+version = providers.gradleProperty("releaseVersion")
+    .map { it.trim() }
+    .orElse(providers.environmentVariable("RELEASE_VERSION").map { it.trim() })
+    .getOrElse("")
+    .ifBlank { "0.1.0-alpha01" }
 
 android {
     namespace = "cn.jingzhuan.adapt.autosize"
@@ -67,15 +72,69 @@ publishing {
 
             pom {
                 name.set("AndroidScreenAdapt AutoSize")
-                description.set("Source-compatible DisplayMetrics screen adaptation library.")
+                description.set("Modern Kotlin-first Android screen adaptation library with current-Window DisplayMetrics engine.")
+                url.set("https://github.com/donglua/AndroidScreenAdapt")
                 licenses {
                     license {
                         name.set("The Apache License, Version 2.0")
                         url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
                 }
+                scm {
+                    connection.set("scm:git:git://github.com/donglua/AndroidScreenAdapt.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/donglua/AndroidScreenAdapt.git")
+                    url.set("https://github.com/donglua/AndroidScreenAdapt")
+                }
             }
         }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/donglua/AndroidScreenAdapt")
+            credentials {
+                username = providers.gradleProperty("gpr.user")
+                    .orElse(providers.environmentVariable("GITHUB_ACTOR"))
+                    .orNull
+                password = providers.gradleProperty("gpr.key")
+                    .orElse(providers.environmentVariable("GITHUB_TOKEN"))
+                    .orNull
+            }
+        }
+
+        val customRepoUrl = providers.gradleProperty("mavenRepoUrl")
+            .orElse(providers.environmentVariable("MAVEN_REPO_URL"))
+            .orNull
+        if (!customRepoUrl.isNullOrBlank()) {
+            maven {
+                name = "CustomMaven"
+                url = uri(customRepoUrl)
+                isAllowInsecureProtocol = customRepoUrl.startsWith("http://")
+                credentials {
+                    username = providers.gradleProperty("mavenUsername")
+                        .orElse(providers.environmentVariable("MAVEN_USERNAME"))
+                        .orNull
+                    password = providers.gradleProperty("mavenPassword")
+                        .orElse(providers.environmentVariable("MAVEN_PASSWORD"))
+                        .orNull
+                }
+            }
+        }
+    }
+}
+
+signing {
+    val signingKey = providers.gradleProperty("signingKey")
+        .orElse(providers.environmentVariable("SIGNING_KEY"))
+        .orNull
+    val signingPassword = providers.gradleProperty("signingPassword")
+        .orElse(providers.environmentVariable("SIGNING_PASSWORD"))
+        .orNull
+    isRequired = !signingKey.isNullOrBlank()
+    if (!signingKey.isNullOrBlank()) {
+        useInMemoryPgpKeys(signingKey, signingPassword.orEmpty())
+        sign(publishing.publications["release"])
     }
 }
 
