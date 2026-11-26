@@ -20,6 +20,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -49,7 +50,8 @@ class ComposeLocalDensityActivity : ComponentActivity(), NoAdapt {
         super.onCreate(savedInstanceState)
         setContent {
             val context = LocalContext.current
-            val targetMetrics = remember(context) {
+            val configuration = LocalConfiguration.current
+            val targetMetrics = remember(context, configuration) {
                 ScreenAdapt.resolveTargetMetrics(context, AdaptDirective.Width(360f))
             }
             val nativeDm = context.resources.displayMetrics

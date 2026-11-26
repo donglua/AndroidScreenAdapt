@@ -78,7 +78,8 @@ class ComposePageActivity : ComponentActivity(), NoAdapt {
         super.onCreate(savedInstanceState)
         setContent {
             val context = LocalContext.current
-            val target = remember(context) {
+            val configuration = LocalConfiguration.current
+            val target = remember(context, configuration) {
                 ScreenAdapt.resolveTargetMetrics(context, AdaptDirective.Width(360f))
             }
             val density = target?.let { Density(it.density, it.fontScale) } ?: LocalDensity.current

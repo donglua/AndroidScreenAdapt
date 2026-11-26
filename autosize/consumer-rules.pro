@@ -15,3 +15,6 @@
 -keep class cn.jingzhuan.adapt.autosize.WindowInfo { *; }
 -keep class cn.jingzhuan.adapt.autosize.AdaptEvent { *; }
 -keep enum cn.jingzhuan.adapt.autosize.AdaptEvent$Type { *; }
+
+# Fragment support is compileOnly; avoid R8 missing-class failures in non-Fragment consumers
+-dontwarn androidx.fragment.app.**
