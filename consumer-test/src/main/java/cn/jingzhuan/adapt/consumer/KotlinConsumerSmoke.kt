@@ -9,7 +9,6 @@ import cn.jingzhuan.adapt.autosize.AdaptEvent
 import cn.jingzhuan.adapt.autosize.AdaptEventListener
 import cn.jingzhuan.adapt.autosize.AdaptStrategy
 import cn.jingzhuan.adapt.autosize.AdaptTarget
-import cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy
 import cn.jingzhuan.adapt.autosize.ScreenAdapt
 import cn.jingzhuan.adapt.autosize.ScreenMetrics
 
@@ -28,7 +27,6 @@ object KotlinConsumerSmoke {
             basis(AdaptBasis.WIDTH)
             excludeFontScale(true)
             customFragment(true)
-            syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             cancelTargets(JavaConsumerSmoke::class.java)
             strategy(AdaptStrategy { target, _ ->
                 when (target) {

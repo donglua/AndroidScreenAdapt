@@ -4,7 +4,6 @@
 -keep class cn.jingzhuan.adapt.autosize.AdaptConfig { *; }
 -keep class cn.jingzhuan.adapt.autosize.AdaptConfig$Builder { *; }
 -keep enum cn.jingzhuan.adapt.autosize.AdaptBasis { *; }
--keep enum cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy { *; }
 -keep class cn.jingzhuan.adapt.autosize.AdaptDirective { *; }
 -keep class cn.jingzhuan.adapt.autosize.AdaptDirective$* { *; }
 -keep interface cn.jingzhuan.adapt.autosize.NoAdapt { *; }

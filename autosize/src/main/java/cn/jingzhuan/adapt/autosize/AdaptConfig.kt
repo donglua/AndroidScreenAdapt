@@ -17,7 +17,6 @@ class AdaptConfig private constructor(
     val supportSp: Boolean,
     val supportScreenSizeDp: Boolean,
     val customFragment: Boolean,
-    val syncPolicy: ApplicationSyncPolicy,
     val debugLog: Boolean,
     val strategy: AdaptStrategy?,
     val cancelTargets: Set<Class<*>>,
@@ -35,7 +34,6 @@ class AdaptConfig private constructor(
         supportSp = true,
         supportScreenSizeDp = false,
         customFragment = true,
-        syncPolicy = ApplicationSyncPolicy.FOREGROUND_SHARED,
         debugLog = false,
         strategy = null,
         cancelTargets = emptySet(),
@@ -54,7 +52,6 @@ class AdaptConfig private constructor(
         var supportSp: Boolean = true
         var supportScreenSizeDp: Boolean = false
         var customFragment: Boolean = true
-        var syncPolicy: ApplicationSyncPolicy = ApplicationSyncPolicy.FOREGROUND_SHARED
         var debugLog: Boolean = false
         var strategy: AdaptStrategy? = null
         private val cancelTargets = LinkedHashSet<Class<*>>()
@@ -83,7 +80,6 @@ class AdaptConfig private constructor(
         fun supportSp(support: Boolean) = apply { this.supportSp = support }
         fun supportScreenSizeDp(support: Boolean) = apply { this.supportScreenSizeDp = support }
         fun customFragment(enable: Boolean) = apply { this.customFragment = enable }
-        fun syncPolicy(policy: ApplicationSyncPolicy) = apply { this.syncPolicy = policy }
         fun debugLog(enable: Boolean) = apply { this.debugLog = enable }
         fun strategy(strategy: AdaptStrategy?) = apply { this.strategy = strategy }
 
@@ -105,7 +101,6 @@ class AdaptConfig private constructor(
             supportSp = supportSp,
             supportScreenSizeDp = supportScreenSizeDp,
             customFragment = customFragment,
-            syncPolicy = syncPolicy,
             debugLog = debugLog,
             strategy = strategy,
             cancelTargets = cancelTargets.toSet(),

@@ -122,12 +122,32 @@ class RuntimeInstrumentationTest {
     }
 
     @Test
-    fun TR06_syncPolicyControlsApplicationMetricsWrites() {
+    fun TR06_foregroundActivitySyncsApplicationMetricsAndSkipsMultiWindow() {
         val initialAppDensity = app.resources.displayMetrics.density
+        WindowBoundsResolver.resolveCurrentWindowOverrideForTesting = { _ ->
+            WindowBounds(
+                widthPx = 1080,
+                heightPx = 1200,
+                realWidthPx = 1080,
+                realHeightPx = 2400,
+                orientation = CoreOrientation.PORTRAIT,
+                inMultiWindow = true
+            ) to WindowInfo(
+                widthPx = 1080,
+                heightPx = 1200,
+                realWidthPx = 1080,
+                realHeightPx = 2400,
+                statusBarInsetPx = 0,
+                navigationBarInsetPx = 0,
+                configurationOrientation = Configuration.ORIENTATION_PORTRAIT,
+                requestedOrientation = -1,
+                inMultiWindow = true,
+                stable = true
+            )
+        }
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdapt.init(app) {
                 designSize(360f, 640f)
-                syncPolicy(ApplicationSyncPolicy.ACTIVITY_ONLY)
             }
         }
 
@@ -139,11 +159,11 @@ class RuntimeInstrumentationTest {
             }
         }
 
+        WindowBoundsResolver.resolveCurrentWindowOverrideForTesting = null
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdaptEngine.resetForTesting()
             ScreenAdapt.init(app) {
                 designSize(360f, 640f)
-                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             }
         }
         ActivityScenario.launch(TestCustomAdaptActivity::class.java).use { scenario ->
@@ -180,7 +200,6 @@ class RuntimeInstrumentationTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdapt.init(app) {
                 designSize(360f, 640f)
-                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             }
         }
         val nativeDensity = app.resources.displayMetrics.density
@@ -296,7 +315,6 @@ class RuntimeInstrumentationTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdapt.init(app) {
                 designSize(400f, 640f)
-                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             }
         }
 
@@ -378,7 +396,6 @@ class RuntimeInstrumentationTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdapt.init(app) {
                 designSize(400f, 640f)
-                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             }
         }
 
@@ -616,7 +633,6 @@ class RuntimeInstrumentationTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdapt.init(app) {
                 designSize(400f, 640f)
-                syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
             }
         }
 

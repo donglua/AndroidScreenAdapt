@@ -4,7 +4,6 @@ import android.app.Activity
 import cn.jingzhuan.adapt.autosize.AdaptBasis
 import cn.jingzhuan.adapt.autosize.AdaptConfig
 import cn.jingzhuan.adapt.autosize.AdaptDirective
-import cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy
 import cn.jingzhuan.adapt.autosize.adaptConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,7 +18,6 @@ class ConsumerContractTest {
         assertTrue(config.useDeviceSize)
         assertTrue(config.customFragment)
         assertFalse(config.excludeFontScale)
-        assertEquals(ApplicationSyncPolicy.FOREGROUND_SHARED, config.syncPolicy)
         assertFalse(config.debugLog)
     }
 

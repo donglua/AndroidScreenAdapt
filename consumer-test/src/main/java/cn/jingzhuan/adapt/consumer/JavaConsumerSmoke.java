@@ -9,7 +9,6 @@ import cn.jingzhuan.adapt.autosize.AdaptConfig;
 import cn.jingzhuan.adapt.autosize.AdaptDirective;
 import cn.jingzhuan.adapt.autosize.AdaptEvent;
 import cn.jingzhuan.adapt.autosize.AdaptEventListener;
-import cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy;
 import cn.jingzhuan.adapt.autosize.NoAdapt;
 import cn.jingzhuan.adapt.autosize.ScreenAdapt;
 import cn.jingzhuan.adapt.autosize.ScreenMetrics;
@@ -27,7 +26,6 @@ public final class JavaConsumerSmoke implements NoAdapt {
                 .basis(AdaptBasis.WIDTH)
                 .excludeFontScale(true)
                 .customFragment(true)
-                .syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
                 .cancelTarget(JavaConsumerSmoke.class)
                 .customTarget(Activity.class, new AdaptDirective.ShortSide(360f, true))
                 .strategy((target, act) -> AdaptDirective.Native.INSTANCE)

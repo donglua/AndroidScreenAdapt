@@ -35,7 +35,6 @@ internal object ResumeCoordinator {
         isNativeMode: Boolean,
         isSkipped: Boolean,
         isDeferred: Boolean,
-        isForegroundSharedPolicy: Boolean,
         canSyncApplication: Boolean,
         lastAppliedStatus: AdaptStatus?,
         lastAppliedBounds: WindowBounds?,
@@ -43,7 +42,7 @@ internal object ResumeCoordinator {
         activityMatchesTarget: Boolean,
         applicationMatchesTarget: Boolean
     ): Boolean {
-        if (!isForegroundSharedPolicy || isNativeMode || isSkipped || isDeferred) return false
+        if (isNativeMode || isSkipped || isDeferred) return false
         if (lastAppliedStatus != AdaptStatus.APPLIED) return false
         if (currentBounds == null || lastAppliedBounds != currentBounds) return false
         if (!canSyncApplication) return false

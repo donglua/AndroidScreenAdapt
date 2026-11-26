@@ -85,7 +85,6 @@ class AdaptConfig {
     val supportSp: Boolean          // 默认 true
     val supportScreenSizeDp: Boolean // 默认 false
     val customFragment: Boolean     // 默认 true
-    val syncPolicy: ApplicationSyncPolicy // 默认 FOREGROUND_SHARED
     val debugLog: Boolean           // 默认 false
     val strategy: AdaptStrategy?
     val cancelTargets: Set<Class<*>>
@@ -100,7 +99,6 @@ ScreenAdapt.init(application) {
     designSize(360f, 640f)
     excludeFontScale(true)
     customFragment(true)
-    syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
     cancelTargets(SomeIgnoredActivity::class.java)
     strategy { target, activity -> ... }
 }
@@ -112,7 +110,6 @@ Java Builder：
 AdaptConfig config = new AdaptConfig.Builder()
         .designSize(360f, 640f)
         .excludeFontScale(true)
-        .syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
         .build();
 ScreenAdapt.init(application, config);
 ```
@@ -123,17 +120,6 @@ ScreenAdapt.init(application, config);
 
 ```kotlin
 enum class AdaptBasis { WIDTH, HEIGHT }
-
-enum class ApplicationSyncPolicy {
-    /** 写入目标 Activity；仅在孤立创建或当前 Activity 前台可见且非多窗口时同步 Application */
-    FOREGROUND_SHARED,
-
-    /** 仅写入目标 Activity，绝不写入 Application */
-    ACTIVITY_ONLY,
-
-    /** 同时写入 Activity 与 Application */
-    LEGACY_SHARED
-}
 
 sealed class AdaptDirective {
     data class Width(val sizeDp: Float) : AdaptDirective()
@@ -153,7 +139,7 @@ fun interface AdaptStrategy { fun resolve(target: Any, activity: Activity): Adap
 
 > **原生模式边界约束（`Native` / `NoAdapt` / `cancelTargets` / `applyNative`）**
 >
-> 1. **只恢复目标 `Activity`，绝不回写 `Application`**：在默认的 `FOREGROUND_SHARED` 或 `LEGACY_SHARED` 策略下，进入原生模式页面后，`Application.resources.displayMetrics` 会**保留上一次已适配页面写入的共享密度**（若需要 `Application` 始终保持原生密度，需配置 `ApplicationSyncPolicy.ACTIVITY_ONLY`）。
+> 1. **只恢复目标 `Activity`，绝不回写 `Application`**：进入原生模式页面后，`Application.resources.displayMetrics` 会**保留上一次已适配页面写入的共享密度**。
 > 2. **`Application Context` 不能默认处于原生密度**：原生页面中通过 `applicationContext` 读取 `DisplayMetrics`、解析资源或 inflate 视图，仍会命中上一次共享密度。
 > 3. **`Dialog` 取决于载体与 `Context` 来源**：`ScreenAdapt` 仅挂接 `Activity` 与 AndroidX `Fragment` 生命周期，**不会**识别普通 `android.app.Dialog` 上的 `NoAdapt`。使用 `Application` Context 构造的 `Dialog`（或宿主 `Activity` 处于适配态时的普通 `Dialog`）不会处于原生密度；只有在 `Native` 态 `Activity` 中使用该 `Activity` Context 构造的 `Dialog`，或命中 `FragmentHook` 的 `NoAdapt` `DialogFragment`（注意这会将宿主 `Activity` 一并切为原生密度），才会读到原生密度。
 > 4. **`Flutter` 视图不能默认全链路处于原生密度**：挂载在 `Native` `Activity` 上且直接读取 `Activity` Context 的 `FlutterView` 会使用原生密度；但使用 `applicationContext` 预热的 `FlutterEngine`，或通过 `Application` Context 读取 `DisplayMetrics` 的插件与测量逻辑，仍会拿到上一次共享密度。

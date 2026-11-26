@@ -11,20 +11,6 @@ enum class AdaptBasis {
 }
 
 /**
- * Controls when Activity adaptation also updates Application Resources.DisplayMetrics.
- */
-enum class ApplicationSyncPolicy {
-    /** Writes Activity; writes Application only during isolated creation or when resumed and not in multi-window. */
-    FOREGROUND_SHARED,
-
-    /** Writes only the target Activity's DisplayMetrics. */
-    ACTIVITY_ONLY,
-
-    /** Writes both Activity and Application unconditionally (legacy behavior). */
-    LEGACY_SHARED
-}
-
-/**
  * Explicit adaptation directive resolved per Activity, Fragment, or custom strategy.
  */
 sealed class AdaptDirective {

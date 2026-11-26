@@ -16,7 +16,6 @@ import cn.jingzhuan.adapt.autosize.AdaptDirective
 import cn.jingzhuan.adapt.autosize.AdaptEvent
 import cn.jingzhuan.adapt.autosize.AdaptEventListener
 import cn.jingzhuan.adapt.autosize.AdaptTarget
-import cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy
 import cn.jingzhuan.adapt.autosize.NoAdapt
 import cn.jingzhuan.adapt.autosize.TargetMetrics
 import cn.jingzhuan.adapt.autosize.WindowInfo
@@ -391,7 +390,6 @@ internal object ScreenAdaptEngine {
                         isNativeMode = session.isNativeMode,
                         isSkipped = session.isSkipped,
                         isDeferred = session.isDeferred,
-                        isForegroundSharedPolicy = config.syncPolicy == ApplicationSyncPolicy.FOREGROUND_SHARED,
                         canSyncApplication = canSyncApplication(activity, session),
                         lastAppliedStatus = result.status,
                         lastAppliedBounds = session.lastAppliedInput?.bounds,
@@ -819,26 +817,20 @@ internal object ScreenAdaptEngine {
     }
 
     private fun canSyncApplication(activity: Activity, session: ActivitySession): Boolean {
-        return when (config.syncPolicy) {
-            ApplicationSyncPolicy.LEGACY_SHARED -> !session.isNativeMode
-            ApplicationSyncPolicy.ACTIVITY_ONLY -> false
-            ApplicationSyncPolicy.FOREGROUND_SHARED -> {
-                if (session.isNativeMode) return false
-                val inMultiWindow = session.cachedBounds?.inMultiWindow ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    try {
-                        activity.isInMultiWindowMode
-                    } catch (_: Exception) {
-                        false
-                    }
-                } else {
-                    false
-                }
-                if (inMultiWindow) return false
-                synchronized(sessionLock) {
-                    if (resumedActivities.contains(activity)) return true
-                    !session.resumedOnce && resumedActivities.none { it !== activity }
-                }
+        if (session.isNativeMode) return false
+        val inMultiWindow = session.cachedBounds?.inMultiWindow ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                activity.isInMultiWindowMode
+            } catch (_: Exception) {
+                false
             }
+        } else {
+            false
+        }
+        if (inMultiWindow) return false
+        return synchronized(sessionLock) {
+            if (resumedActivities.contains(activity)) return true
+            !session.resumedOnce && resumedActivities.none { it !== activity }
         }
     }
 

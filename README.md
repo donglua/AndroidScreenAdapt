@@ -21,7 +21,7 @@ AndroidScreenAdapt 是一个面向现代 Android 工程的屏幕适配库（发�
 
 - **显式幂等初始化**：不在合并后的 `AndroidManifest.xml` 中注册 `ContentProvider`，由宿主在 `Application#onCreate` 或按设备形态条件调用 `ScreenAdapt.init`。
 - **当前 Window 唯一事实来源**：移除进程级共享宽高缓存，按目标 Activity 的当前 Window（API 30+ `WindowMetrics`、低版本 `Display#getMetrics`）计算；支持分屏/小窗自动回退窗口短边。
-- **三种 `Application` 同步策略**：支持 `FOREGROUND_SHARED`（默认，仅当安全共享时同步 `Application`）、`ACTIVITY_ONLY` 与 `LEGACY_SHARED`；原生模式（`AdaptDirective.Native` / `NoAdapt` / `applyNative`）仅恢复目标 `Activity`、绝不修改 `Application`。因此，在 `FOREGROUND_SHARED` / `LEGACY_SHARED` 下，`Native` 页面内的 `Application Context`、基于 `Application` 创建的 `Dialog` 或使用 `Application` 预热的 `Flutter` 引擎/视图不能默认处于原生密度（详见 [API 文档](docs/API.md#指令与页面标记)）。
+- **前台安全共享 `Application` 密度**：仅在孤立创建或前台单窗口状态下同步 `Application`，避免分屏多窗口或后台页相互覆盖；原生模式（`AdaptDirective.Native` / `NoAdapt` / `applyNative`）仅恢复目标 `Activity`、绝不修改 `Application`（详见 [API 文档](docs/API.md#指令与页面标记)）。
 - **事件驱动纠偏 + O(1) 快速校验**：基于生命周期、配置变化与 `OnGlobalLayout` 纠偏，配合零分配 `ScreenAdapt.ensureApplied(activity)` 供基类 `getResources()` 防止系统重置密度（无轮询后台线程）。
 - **AndroidX Fragment 与 MIUI 兼容**：支持 Fragment 级 `AdaptTarget` / `NoAdapt` 覆盖，并内置 MIUI `mTmpMetrics` 同步。
 
@@ -43,7 +43,6 @@ class App : Application() {
             designSize(360f, 640f)
             excludeFontScale(true)
             customFragment(true)
-            syncPolicy(ApplicationSyncPolicy.FOREGROUND_SHARED)
         }
     }
 }

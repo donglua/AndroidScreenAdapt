@@ -18,13 +18,12 @@ public final class cn.jingzhuan.adapt.autosize.AdaptConfig {
   public final boolean getSupportSp();
   public final boolean getSupportScreenSizeDp();
   public final boolean getCustomFragment();
-  public final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy getSyncPolicy();
   public final boolean getDebugLog();
   public final cn.jingzhuan.adapt.autosize.AdaptStrategy getStrategy();
   public final java.util.Set<java.lang.Class<?>> getCancelTargets();
   public final java.util.Map<java.lang.Class<?>, cn.jingzhuan.adapt.autosize.AdaptDirective> getCustomTargets();
   public cn.jingzhuan.adapt.autosize.AdaptConfig();
-  public cn.jingzhuan.adapt.autosize.AdaptConfig(float, float, cn.jingzhuan.adapt.autosize.AdaptBasis, boolean, float, boolean, int, boolean, boolean, boolean, boolean, cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy, boolean, cn.jingzhuan.adapt.autosize.AdaptStrategy, java.util.Set, java.util.Map, kotlin.jvm.internal.DefaultConstructorMarker);
+  public cn.jingzhuan.adapt.autosize.AdaptConfig(float, float, cn.jingzhuan.adapt.autosize.AdaptBasis, boolean, float, boolean, int, boolean, boolean, boolean, boolean, boolean, cn.jingzhuan.adapt.autosize.AdaptStrategy, java.util.Set, java.util.Map, kotlin.jvm.internal.DefaultConstructorMarker);
 }
 
 public final class cn.jingzhuan.adapt.autosize.AdaptConfig$Builder {
@@ -51,8 +50,6 @@ public final class cn.jingzhuan.adapt.autosize.AdaptConfig$Builder {
   public final void setSupportScreenSizeDp(boolean);
   public final boolean getCustomFragment();
   public final void setCustomFragment(boolean);
-  public final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy getSyncPolicy();
-  public final void setSyncPolicy(cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy);
   public final boolean getDebugLog();
   public final void setDebugLog(boolean);
   public final cn.jingzhuan.adapt.autosize.AdaptStrategy getStrategy();
@@ -67,7 +64,6 @@ public final class cn.jingzhuan.adapt.autosize.AdaptConfig$Builder {
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder supportSp(boolean);
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder supportScreenSizeDp(boolean);
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder customFragment(boolean);
-  public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder syncPolicy(cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy);
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder debugLog(boolean);
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder strategy(cn.jingzhuan.adapt.autosize.AdaptStrategy);
   public final cn.jingzhuan.adapt.autosize.AdaptConfig$Builder cancelTarget(java.lang.Class<?>);
@@ -171,15 +167,6 @@ public interface cn.jingzhuan.adapt.autosize.AdaptStrategy {
 
 public interface cn.jingzhuan.adapt.autosize.AdaptTarget {
   public abstract cn.jingzhuan.adapt.autosize.AdaptDirective adaptDirective();
-}
-
-public final class cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy extends java.lang.Enum<cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy> {
-  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy FOREGROUND_SHARED;
-  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy ACTIVITY_ONLY;
-  public static final cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy LEGACY_SHARED;
-  public static cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy[] values();
-  public static cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy valueOf(java.lang.String);
-  public static kotlin.enums.EnumEntries<cn.jingzhuan.adapt.autosize.ApplicationSyncPolicy> getEntries();
 }
 
 public interface cn.jingzhuan.adapt.autosize.NoAdapt {
