@@ -4,8 +4,8 @@
 
 ```text
 Android namespace：cn.jingzhuan.adapt.autosize
-Maven group：cn.jingzhuan.adapt
-发布制品：cn.jingzhuan.adapt:autosize（单制品 Android AAR）
+Maven group：io.github.donglua.adapt
+发布制品：io.github.donglua.adapt:autosize（单制品 Android AAR）
 内部核心包：cn.jingzhuan.adapt.autosize.core（纯 JVM，不依赖 android.* / androidx.*）
 内部引擎包：cn.jingzhuan.adapt.autosize.engine（内部运行时，非公开 API）
 ```
