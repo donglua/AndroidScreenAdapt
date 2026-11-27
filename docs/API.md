@@ -60,6 +60,10 @@ object ScreenAdapt {
     @JvmStatic
     fun getWindowInfo(activity: Activity): WindowInfo?
 
+    /** 读取未被 ScreenAdapt 改写过的原生显示密度（适合在 AdaptStrategy 中区分平板与高密折叠屏） */
+    @JvmStatic
+    fun getNativeDensity(context: Context): Float
+
     @JvmStatic
     fun addListener(activity: Activity, listener: AdaptEventListener)
 
@@ -145,13 +149,13 @@ fun interface AdaptStrategy { fun resolve(target: Any, activity: Activity): Adap
 | :--- | :--- | :--- |
 | `AdaptDirective.Width(sizeDp)` | 以当前窗口可用宽度为基准计算 `density = widthPx / sizeDp` | 常规竖屏页、折叠屏展开态扩宽设计稿（如 `720f`）、阔直板调宽设计稿 |
 | `AdaptDirective.Height(sizeDp)` | 以当前窗口可用高度为基准计算 `density = heightPx / sizeDp` | 强依赖纵向满屏比例的页面 |
-| `AdaptDirective.ShortSide(effectiveSizeDp, useRealDisplay = true)` | 以短边为基准计算密度；当 `useRealDisplay = true` 且处于全屏时取物理短边，**若处于分屏/多窗口或窗口短边小于物理短边的 `85%` 时自动回退为当前窗口短边** | 横屏页（保持与竖屏一致的视觉尺度）、大屏与分屏兼容 |
+| `AdaptDirective.ShortSide(effectiveSizeDp, useRealDisplay = true)` | 以短边为基准计算密度；当 `useRealDisplay = true` 且处于全屏时取物理短边，**若处于分屏/多窗口，或窗口短边/长边任一小于物理对应边的 `85%`（如平行视界、自由小窗）时自动回退为当前窗口短边** | 横屏页（保持与竖屏一致的视觉尺度）、大屏、平行视界与分屏兼容 |
 | `AdaptDirective.Native` | 恢复当前 `Activity` 自身原生快照，绝不写入 `Application` | 平板/大屏原生响应式页面、不需要缩放的登录/媒体/Compose 页面 |
-| `AdaptDirective.Skip` | 跳过本次适配，保持当前状态不变 | 特殊过渡页或由业务自行接管密度的场景 |
+| `AdaptDirective.Skip` | 跳过本次适配，保持当前 `DisplayMetrics` 状态不变（**不会还原原生密度**，取消适配请使用 `Native`） | 特殊过渡页或由业务自行接管密度的场景 |
 
 > **`AdaptStrategy` 与多形态设备动态切换说明**
 >
-> - 引擎在调用 `AdaptStrategy.resolve(target, activity)` 之前已完成当前 `WindowInfo` 刷新，策略内可直接安全调用 `ScreenAdapt.getWindowInfo(activity)` 与读取 `activity.resources.configuration`（`smallestScreenWidthDp` 不会被本库修改，始终反映系统原生短边 dp）。
+> - 引擎在调用 `AdaptStrategy.resolve(target, activity)` 之前已完成当前 `WindowInfo` 刷新，策略内可直接安全调用 `ScreenAdapt.getWindowInfo(activity)`、`ScreenAdapt.getNativeDensity(activity)` 与读取 `activity.resources.configuration`（`smallestScreenWidthDp` 不会被本库修改，始终反映系统原生短边 dp）。
 > - 折叠屏展开/折叠、阔直板旋转、分屏/自由窗口拖拽时，引擎会通过 `ComponentCallbacks.onConfigurationChanged`（API 29+）与 `OnGlobalLayout` 自动刷新窗口并重新执行 `AdaptStrategy`；不重建 `Activity` 的页面需在 `AndroidManifest.xml` 中声明 `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"`。
 > - `AdaptStrategy` 返回 `null` 时回退全局 `designWidthDp` / `designHeightDp` 与 `basis`。
 

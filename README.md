@@ -92,48 +92,66 @@ class ComposePageActivity : ComponentActivity(), NoAdapt {
 }
 ```
 
-### 4. 多形态设备配置（折叠屏 / 阔直板 / 平板 / 横屏）
+### 4. 多形态设备配置（折叠屏 / 阔折叠 / 平板 / 平行视界 / 横屏）
 
-底层已按当前 `Window` 实时计算并自动监听窗口变化（折叠展开、分屏拖拽、横竖屏切换），但大屏与异形比例的**设计稿宽度或是否退回原生**需要结合业务需求在 `strategy` 中指定。引擎在回调 `strategy` 前已刷新当前窗口信息，可直接安全读取 `ScreenAdapt.getWindowInfo(activity)` 与 `activity.resources.configuration`：
+底层已按当前 `Window` 实时计算并自动监听窗口变化（折叠展开、平行视界、分屏拖拽、横竖屏切换），但大屏与异形比例的**设计稿分档或原生回退**需要结合业务需求在 `strategy` 中指定。引擎在回调 `strategy` 前已刷新当前窗口信息，可直接安全读取 `ScreenAdapt.getWindowInfo(activity)`、`ScreenAdapt.getNativeDensity(activity)` 与 `activity.resources.configuration`：
 
 ```kotlin
 ScreenAdapt.init(this) {
-    designSize(360f, 640f)
+    designSize(375f, 667f)
     excludeFontScale(true)
     strategy { _, activity ->
         val info = ScreenAdapt.getWindowInfo(activity) ?: return@strategy null
+        val w = info.widthPx
+        val h = info.heightPx
+        if (w <= 0 || h <= 0) return@strategy null
+
+        val shortPx = minOf(w, h)
+        val longPx = maxOf(w, h)
+        val realShort = minOf(info.realWidthPx, info.realHeightPx)
+        val realLong = maxOf(info.realWidthPx, info.realHeightPx)
+        val ratio = w.toFloat() / h.toFloat()
+
+        // 识别分屏、自由小窗及华为平行视界（windowMode=103 下 isInMultiWindowMode 可能为 false）
+        val isSubWindow = info.inMultiWindow ||
+            (realShort > 0 && shortPx < realShort * 0.85f) ||
+            (realLong > 0 && longPx < realLong * 0.85f)
+
         val swDp = activity.resources.configuration.smallestScreenWidthDp
-        val shortPx = minOf(info.widthPx, info.heightPx)
-        val longPx = maxOf(info.widthPx, info.heightPx)
-        val aspectRatio = if (longPx > 0) shortPx.toFloat() / longPx else 0f
+        val nativeDensity = ScreenAdapt.getNativeDensity(activity)
+        val isTabletDevice = swDp >= 600 && (realLong.toFloat() / realShort.coerceAtLeast(1)) > 1.2f
 
         when {
-            // 1. 分屏 / 自由窗口：按当前窗口宽度适配（或返回 ShortSide 自动取窗口短边）
-            info.inMultiWindow -> AdaptDirective.Width(360f)
+            // 1. 近似方形折叠屏展开态（如 Mate X5/X6 内屏）：扩大设计宽度，避免 375dp 过度放大
+            !isSubWindow && w > 1500 && ratio in 0.85f..1.15f ->
+                AdaptDirective.Width(750f)
 
-            // 2. 折叠屏展开态（接近方形内屏）：扩大设计宽度，避免 360dp 等比过度放大
-            aspectRatio >= 0.8f -> AdaptDirective.Width(720f)
+            // 2. 平板 / 三折叠全屏（排除平行视界与小窗）：走 750dp 或直接返回 AdaptDirective.Native
+            !isSubWindow && (
+                (isTabletDevice && shortPx >= 1500) ||
+                    (shortPx >= 1500 && nativeDensity in 0.1f..2.5f) ||
+                    shortPx >= 2000
+                ) -> AdaptDirective.ShortSide(750f, useRealDisplay = false)
 
-            // 3. 平板：按大屏设计稿适配，或返回 AdaptDirective.Native 走原生响应式布局
-            swDp >= 600 -> AdaptDirective.Native
+            // 3. 高密阔折叠内屏展开态（如 7~8 英寸高 PPI 内屏）：按短边 600dp，避免误落入平板档导致字号骤缩
+            !isSubWindow && shortPx >= 1500 ->
+                AdaptDirective.ShortSide(600f, useRealDisplay = false)
 
-            // 4. 阔直板等宽屏手机（如 16:10 / 宽比例直板机）：适当放宽设计宽度以展示更多内容
-            swDp >= 450 || aspectRatio >= 0.6f -> AdaptDirective.Width(420f)
-
-            // 5. 普通手机横屏：按真实短边适配，保持与竖屏一致的控件/字号尺度
-            info.configurationOrientation == Configuration.ORIENTATION_LANDSCAPE ->
-                AdaptDirective.ShortSide(360f, useRealDisplay = true)
-
-            // 6. 其余普通手机竖屏：回退全局 designSize(360f, 640f)
-            else -> null
+            // 4. 直板手机（竖/横屏）、阔折叠小外屏、平行视界与分屏小窗：375dp 基准 + 短屏保护（最高放宽至 420dp）
+            else -> {
+                val effectiveShortDp = ((shortPx.toFloat() / longPx.toFloat()) * 667f)
+                    .coerceIn(375f, 420f)
+                AdaptDirective.ShortSide(effectiveShortDp, useRealDisplay = !isSubWindow)
+            }
         }
     }
 }
 ```
 
 > **提示**：
-> - 以上阈值（`0.8f`、`600dp`、`450dp`、`720f`/`420f`）仅为参考，请结合自身 UI 设计稿调整；若希望平板整机完全不启用适配，也可在 `Application#onCreate` 判断条件后直接跳过 `ScreenAdapt.init(...)`（`ScreenMetrics` 仍可安全调用）。
-> - 若希望折叠屏展开/折叠或横竖屏切换时 **不重建 `Activity`**，在 `AndroidManifest.xml` 中为对应页面配置 `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"`，引擎会在配置与布局变更时自动按新窗口重算密度。
+> - 以上分档阈值（`375f / 420f / 600f / 750f`、`667f`、`1500px`、`2.5f`）仅为参考，请结合自身 UI 设计稿调整；如果希望平板（含平行视界）统一走原生响应式布局，直接对平板分支返回 `AdaptDirective.Native`，或在 `Application#onCreate` 跳过 `ScreenAdapt.init(...)`（`ScreenMetrics` 仍可安全调用）。
+> - **取消/退出适配请务必返回 `AdaptDirective.Native`，不要返回 `AdaptDirective.Skip`**：`Skip` 会保留上一次已写入的密度；在不重建 `Activity` 旋转进入平行视界或横屏时，返回 `Skip` 会把竖屏密度残留到新窗口中造成裁切。
+> - 若希望折叠屏展开/折叠、平行视界切换或横竖屏旋转时 **不重建 `Activity`**，在 `AndroidManifest.xml` 中为对应页面配置 `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"`，引擎会在配置与布局变更时自动按新窗口重算密度。
 
 完整接口签名、配置项、指令模型与 `ScreenMetrics` 工具说明见 [API 文档](docs/API.md)。
 

@@ -60,6 +60,10 @@ object ScreenAdapt {
     @JvmStatic
     fun getWindowInfo(activity: Activity): WindowInfo?
 
+    /** Returns the unadapted native display density for a Context (useful in AdaptStrategy to distinguish tablets from high-PPI foldables). */
+    @JvmStatic
+    fun getNativeDensity(context: Context): Float
+
     @JvmStatic
     fun addListener(activity: Activity, listener: AdaptEventListener)
 
@@ -145,13 +149,13 @@ Semantics and common use cases for each `AdaptDirective`:
 | :--- | :--- | :--- |
 | `AdaptDirective.Width(sizeDp)` | Computes `density = widthPx / sizeDp` using current available window width | Standard portrait pages, widened design specs on unfolded foldables (e.g., `720f`) or wide-bar phones |
 | `AdaptDirective.Height(sizeDp)` | Computes `density = heightPx / sizeDp` using current available window height | Full-height layout pages sensitive to vertical proportions |
-| `AdaptDirective.ShortSide(effectiveSizeDp, useRealDisplay = true)` | Scales by short side; uses physical display short side when `useRealDisplay = true` and fullscreen, **automatically falling back to current window short side in multi-window/split-screen or when window short side is `< 85%` of physical short side** | Landscape pages (keeps visual scale consistent with portrait), large screens, and split-screen compatibility |
+| `AdaptDirective.ShortSide(effectiveSizeDp, useRealDisplay = true)` | Scales by short side; uses physical display short side when `useRealDisplay = true` and fullscreen, **automatically falling back to current window short side in multi-window/split-screen or when either window short side or long side is `< 85%` of the physical display (e.g., OEM MagicWindow / freeform)** | Landscape pages (keeps visual scale consistent with portrait), large screens, MagicWindow, and split-screen compatibility |
 | `AdaptDirective.Native` | Restores the target `Activity`'s own native snapshot without writing to `Application` | Tablet/large-screen responsive pages, login/media/Compose pages that should not be scaled |
-| `AdaptDirective.Skip` | Skips this adaptation pass and keeps current metrics untouched | Transitional pages or screens managed manually |
+| `AdaptDirective.Skip` | Skips this adaptation pass and keeps current `DisplayMetrics` untouched (**does not restore native density**; use `Native` to opt out) | Transitional pages or screens managed manually |
 
 > **`AdaptStrategy` & Multi-Form-Factor Dynamic Switching**
 >
-> - The engine refreshes the current `WindowInfo` before invoking `AdaptStrategy.resolve(target, activity)`, so strategies can safely call `ScreenAdapt.getWindowInfo(activity)` and read `activity.resources.configuration` (`smallestScreenWidthDp` is never mutated by this library and always reflects the system native value).
+> - The engine refreshes the current `WindowInfo` before invoking `AdaptStrategy.resolve(target, activity)`, so strategies can safely call `ScreenAdapt.getWindowInfo(activity)`, `ScreenAdapt.getNativeDensity(activity)`, and read `activity.resources.configuration` (`smallestScreenWidthDp` is never mutated by this library and always reflects the system native value).
 > - On foldable fold/unfold, wide-bar rotation, or split-screen/freeform resizing, the engine automatically refreshes window bounds and re-runs `AdaptStrategy` via `ComponentCallbacks.onConfigurationChanged` (API 29+) and `OnGlobalLayout`. Pages that should not recreate on resize must declare `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"` in `AndroidManifest.xml`.
 > - Returning `null` from `AdaptStrategy` falls back to the global `designWidthDp` / `designHeightDp` and `basis`.
 

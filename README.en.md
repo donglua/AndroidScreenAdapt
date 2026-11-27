@@ -92,48 +92,70 @@ class ComposePageActivity : ComponentActivity(), NoAdapt {
 }
 ```
 
-### 4. Multi-Form-Factor Configuration (Foldables / Wide-Bar Phones / Tablets / Landscape)
+### 4. Multi-Form-Factor Configuration (Foldables / Wide Foldables / Tablets / MagicWindow / Landscape)
 
-The engine computes metrics from the current `Window` and automatically tracks window changes (fold/unfold, split-screen resizing, orientation changes), while design widths or native fallbacks for large/unusual screens should be defined in `strategy` to match your product design. `ScreenAdapt.getWindowInfo(activity)` and `activity.resources.configuration` are already refreshed before `strategy` is invoked and can be read safely inside it:
+The engine computes metrics from the current `Window` and automatically tracks window changes (fold/unfold, OEM MagicWindow/letterboxing, split-screen resizing, orientation changes), while tier thresholds or native fallbacks for large/unusual screens should be defined in `strategy` to match your product design. `ScreenAdapt.getWindowInfo(activity)`, `ScreenAdapt.getNativeDensity(activity)`, and `activity.resources.configuration` are refreshed before `strategy` runs and can be read safely inside it:
 
 ```kotlin
 ScreenAdapt.init(this) {
-    designSize(360f, 640f)
+    designSize(375f, 667f)
     excludeFontScale(true)
     strategy { _, activity ->
         val info = ScreenAdapt.getWindowInfo(activity) ?: return@strategy null
+        val w = info.widthPx
+        val h = info.heightPx
+        if (w <= 0 || h <= 0) return@strategy null
+
+        val shortPx = minOf(w, h)
+        val longPx = maxOf(w, h)
+        val realShort = minOf(info.realWidthPx, info.realHeightPx)
+        val realLong = maxOf(info.realWidthPx, info.realHeightPx)
+        val ratio = w.toFloat() / h.toFloat()
+
+        // Detect split-screen, freeform, and OEM MagicWindow/letterboxed windows
+        // (where activity.isInMultiWindowMode may still report false).
+        val isSubWindow = info.inMultiWindow ||
+            (realShort > 0 && shortPx < realShort * 0.85f) ||
+            (realLong > 0 && longPx < realLong * 0.85f)
+
         val swDp = activity.resources.configuration.smallestScreenWidthDp
-        val shortPx = minOf(info.widthPx, info.heightPx)
-        val longPx = maxOf(info.widthPx, info.heightPx)
-        val aspectRatio = if (longPx > 0) shortPx.toFloat() / longPx else 0f
+        val nativeDensity = ScreenAdapt.getNativeDensity(activity)
+        val isTabletDevice = swDp >= 600 && (realLong.toFloat() / realShort.coerceAtLeast(1)) > 1.2f
 
         when {
-            // 1. Split-screen / freeform window: adapt to current window width (or ShortSide for window short side)
-            info.inMultiWindow -> AdaptDirective.Width(360f)
+            // 1. Near-square unfolded foldable (e.g., Mate X5/X6 inner display)
+            !isSubWindow && w > 1500 && ratio in 0.85f..1.15f ->
+                AdaptDirective.Width(750f)
 
-            // 2. Unfolded foldable (near-square inner display): widen design width to avoid over-scaling 360dp
-            aspectRatio >= 0.8f -> AdaptDirective.Width(720f)
+            // 2. Fullscreen tablets / tri-foldables (excluding constrained MagicWindow/freeform sub-windows):
+            //    scale to 750dp or return AdaptDirective.Native for responsive layouts.
+            !isSubWindow && (
+                (isTabletDevice && shortPx >= 1500) ||
+                    (shortPx >= 1500 && nativeDensity in 0.1f..2.5f) ||
+                    shortPx >= 2000
+                ) -> AdaptDirective.ShortSide(750f, useRealDisplay = false)
 
-            // 3. Tablets: use a tablet design width or return AdaptDirective.Native for responsive layouts
-            swDp >= 600 -> AdaptDirective.Native
+            // 3. High-PPI wide-foldable inner display (e.g., 7-8" wide foldables): 600dp short side
+            //    to avoid sudden font shrinkage from falling into the tablet 750dp bucket.
+            !isSubWindow && shortPx >= 1500 ->
+                AdaptDirective.ShortSide(600f, useRealDisplay = false)
 
-            // 4. Wide-aspect phones (e.g. 16:10 / wide-bar devices): widen design width to show more content
-            swDp >= 450 || aspectRatio >= 0.6f -> AdaptDirective.Width(420f)
-
-            // 5. Standard phone landscape: scale by real display short side to match portrait proportions
-            info.configurationOrientation == Configuration.ORIENTATION_LANDSCAPE ->
-                AdaptDirective.ShortSide(360f, useRealDisplay = true)
-
-            // 6. Standard phone portrait: fall back to global designSize(360f, 640f)
-            else -> null
+            // 4. Phones (portrait/landscape), short/square cover screens, MagicWindow, and split/freeform sub-windows:
+            //    375dp base with short-screen protection relaxing short side up to 420dp.
+            else -> {
+                val effectiveShortDp = ((shortPx.toFloat() / longPx.toFloat()) * 667f)
+                    .coerceIn(375f, 420f)
+                AdaptDirective.ShortSide(effectiveShortDp, useRealDisplay = !isSubWindow)
+            }
         }
     }
 }
 ```
 
 > **Notes**:
-> - Thresholds above (`0.8f`, `600dp`, `450dp`, `720f`/`420f`) are reference examples—adjust them to match your design specs. If you want tablets to disable adaptation app-wide, you can skip calling `ScreenAdapt.init(...)` in `Application#onCreate` (`ScreenMetrics` remains safe to call).
-> - To handle fold/unfold or rotation **without recreating the `Activity`**, declare `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"` in `AndroidManifest.xml`; the engine will automatically recalculate density on configuration and layout changes.
+> - Thresholds above (`375f / 420f / 600f / 750f`, `667f`, `1500px`, `2.5f`) are reference examples—adjust them to match your design specs. If tablets (including MagicWindow) should use native responsive layouts, return `AdaptDirective.Native` for tablets or skip calling `ScreenAdapt.init(...)` in `Application#onCreate` (`ScreenMetrics` remains safe to call).
+> - **Always return `AdaptDirective.Native` (never `AdaptDirective.Skip`) to opt out of scaling**: `Skip` leaves the previous `DisplayMetrics` untouched, so rotating without Activity recreation (for instance, entering a centered MagicWindow on a tablet) would retain the portrait density and clip the UI.
+> - To handle fold/unfold, MagicWindow transitions, or rotation **without recreating the `Activity`**, declare `android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"` in `AndroidManifest.xml`; the engine will automatically recalculate density on configuration and layout changes.
 
 See [API Documentation](docs/API.en.md) for full signatures, configuration options, directives, and `ScreenMetrics` utilities.
 
