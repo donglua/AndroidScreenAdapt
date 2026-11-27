@@ -245,10 +245,13 @@ class RuntimeInstrumentationTest {
                 val adapted = info.widthPx / 360f
                 assertEquals(adapted, activity.resources.displayMetrics.density, 1e-4f)
                 assertEquals(adapted, app.resources.displayMetrics.density, 1e-4f)
+                assertEquals(nativeDensity, ScreenAdapt.getNativeDensity(activity), 1e-4f)
+                assertEquals(nativeDensity, ScreenAdapt.getNativeDensity(app), 1e-4f)
 
                 ScreenAdapt.applyNative(activity)
                 assertEquals(nativeDensity, activity.resources.displayMetrics.density, 1e-4f)
                 assertEquals(adapted, app.resources.displayMetrics.density, 1e-4f)
+                assertEquals(nativeDensity, ScreenAdapt.getNativeDensity(activity), 1e-4f)
             }
         }
     }
@@ -586,6 +589,7 @@ class RuntimeInstrumentationTest {
 
                 val resolved = ScreenAdapt.resolveTargetMetrics(activity, AdaptDirective.Native)!!
                 assertEquals(2.0f, resolved.density, 1e-4f)
+                assertEquals(2.0f, ScreenAdapt.getNativeDensity(activity), 1e-4f)
                 assertEquals(3.0f, resolved.scaledDensity, 1e-4f)
                 assertEquals(780, resolved.screenWidthDp)
                 assertEquals(360, resolved.screenHeightDp)

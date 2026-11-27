@@ -288,6 +288,24 @@ internal object ScreenAdaptEngine {
         return session.cachedWindowInfo
     }
 
+    fun getNativeDensity(context: Context): Float {
+        val baseline = appNativeSnapshot
+            ?: application?.let { MetricsSnapshotReader.captureApplicationNative(it) }
+        if (baseline == null) {
+            val configDpi = context.resources.configuration.densityDpi
+            if (configDpi > 0) return configDpi / 160f
+            return context.resources.displayMetrics.density
+        }
+        val activity = WindowBoundsResolver.findActivity(context)
+        val snapshot = if (activity != null) {
+            findSession(activity)?.let { computeActivityNativeSnapshot(activity.resources, it) }
+                ?: MetricsSnapshotReader.captureActivityNative(activity, baseline)
+        } else {
+            MetricsSnapshotReader.updateForConfiguration(baseline, context.resources.configuration, baseline)
+        }
+        return snapshot.density
+    }
+
     fun addListener(activity: Activity, listener: AdaptEventListener) {
         val session = if (Looper.myLooper() == Looper.getMainLooper()) {
             getOrCreateSession(activity)

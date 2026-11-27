@@ -44,8 +44,9 @@ object KotlinConsumerSmoke {
         ScreenAdapt.ensureApplied(activity)
 
         val windowInfo = ScreenAdapt.getWindowInfo(activity)
+        val nativeDensity = ScreenAdapt.getNativeDensity(activity)
         val listener = AdaptEventListener { _, event ->
-            if (event.type == AdaptEvent.Type.APPLIED && targetMetrics != null && windowInfo != null) {
+            if (event.type == AdaptEvent.Type.APPLIED && targetMetrics != null && windowInfo != null && nativeDensity > 0f) {
                 event.reason.length
             }
         }

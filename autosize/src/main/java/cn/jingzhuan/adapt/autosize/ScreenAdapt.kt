@@ -92,6 +92,16 @@ object ScreenAdapt {
         return ScreenAdaptEngine.getWindowInfo(activity)
     }
 
+    /**
+     * Returns the unadapted native display density for [context], unaffected by ScreenAdapt's
+     * runtime `DisplayMetrics` mutations. Safe to call inside [AdaptStrategy] (e.g. to
+     * distinguish low-density tablets from high-density wide foldables) and before [init].
+     */
+    @JvmStatic
+    fun getNativeDensity(context: Context): Float {
+        return ScreenAdaptEngine.getNativeDensity(context)
+    }
+
     @JvmStatic
     fun addListener(activity: Activity, listener: AdaptEventListener) {
         ScreenAdaptEngine.addListener(activity, listener)

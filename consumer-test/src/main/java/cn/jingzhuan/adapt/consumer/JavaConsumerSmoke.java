@@ -51,6 +51,10 @@ public final class JavaConsumerSmoke implements NoAdapt {
         if (info != null) {
             int ignored = info.getWidthPx() + info.getHeightPx();
         }
+        float nativeDensity = ScreenAdapt.getNativeDensity(activity);
+        if (nativeDensity <= 0f) {
+            throw new IllegalStateException("Expected positive native density");
+        }
 
         AdaptEventListener listener = (act, event) -> {
             if (event.getType() == AdaptEvent.Type.APPLIED) {

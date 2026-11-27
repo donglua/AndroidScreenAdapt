@@ -187,6 +187,7 @@ public final class cn.jingzhuan.adapt.autosize.ScreenAdapt {
   public static final cn.jingzhuan.adapt.autosize.TargetMetrics resolveTargetMetrics(android.content.Context, cn.jingzhuan.adapt.autosize.AdaptDirective);
   public static cn.jingzhuan.adapt.autosize.TargetMetrics resolveTargetMetrics$default(android.content.Context, cn.jingzhuan.adapt.autosize.AdaptDirective, int, java.lang.Object);
   public static final cn.jingzhuan.adapt.autosize.WindowInfo getWindowInfo(android.app.Activity);
+  public static final float getNativeDensity(android.content.Context);
   public static final void addListener(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptEventListener);
   public static final void removeListener(android.app.Activity, cn.jingzhuan.adapt.autosize.AdaptEventListener);
   public static final void init(android.app.Application);
