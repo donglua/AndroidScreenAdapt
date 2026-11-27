@@ -33,7 +33,7 @@ Accordingly, the library adopts only two safe, localized isolation capabilities 
 
 ```kotlin
 dependencies {
-    implementation("io.github.donglua.adapt:autosize:0.1.0")
+    implementation("io.github.donglua.adapt:autosize:0.2.0")
 }
 ```
 

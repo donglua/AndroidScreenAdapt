@@ -27,7 +27,7 @@ val publishedArtifactId = configuredValue("publishedArtifactId", "PUBLISHED_ARTI
 val publishedVersion = configuredValue(
     "publishedVersion",
     "PUBLISHED_VERSION",
-    configuredValue("releaseVersion", "RELEASE_VERSION", "0.1.0")
+    configuredValue("releaseVersion", "RELEASE_VERSION", "0.2.0")
 )
 val publishedName = configuredValue("publishedName", "PUBLISHED_NAME", "AndroidScreenAdapt AutoSize")
 val publishedDescription = configuredValue(
