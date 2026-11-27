@@ -174,6 +174,30 @@ object AdaptCalculator {
         }
     }
 
+    /**
+     * Returns true when the window is explicitly in multi-window mode or either its short side
+     * or long side is significantly smaller than the physical display (e.g. split-screen,
+     * freeform, or OEM MagicWindow/letterboxed compatibility windows where `isInMultiWindowMode`
+     * may still report false).
+     */
+    fun isWindowConstrained(
+        bounds: WindowBounds,
+        availableWidthPx: Int = bounds.widthPx,
+        availableHeightPx: Int = bounds.heightPx
+    ): Boolean {
+        if (bounds.inMultiWindow) return true
+        if (availableWidthPx <= 0 || availableHeightPx <= 0) return false
+        val windowShortSide = min(availableWidthPx, availableHeightPx)
+        val windowLongSide = max(availableWidthPx, availableHeightPx)
+        val realShortSide = min(bounds.realWidthPx, bounds.realHeightPx)
+        val realLongSide = max(bounds.realWidthPx, bounds.realHeightPx)
+        val shortConstrained =
+            realShortSide > 0 && windowShortSide < realShortSide * REAL_SHORT_SIDE_MIN_WINDOW_RATIO
+        val longConstrained =
+            realLongSide > 0 && windowLongSide < realLongSide * REAL_SHORT_SIDE_MIN_WINDOW_RATIO
+        return shortConstrained || longConstrained
+    }
+
     private fun validateInputs(
         spec: AdaptSpec,
         bounds: WindowBounds,
@@ -232,14 +256,13 @@ object AdaptCalculator {
             CoreAdaptBasis.HEIGHT -> effectiveHeightPx.toFloat()
             CoreAdaptBasis.SHORT_SIDE -> {
                 val windowShortSide = min(effectiveWidthPx, effectiveHeightPx)
-                if (!spec.useRealDisplayShortSide || bounds.inMultiWindow) {
+                if (!spec.useRealDisplayShortSide ||
+                    isWindowConstrained(bounds, effectiveWidthPx, effectiveHeightPx)
+                ) {
                     return windowShortSide.toFloat()
                 }
                 val realShortSide = min(bounds.realWidthPx, bounds.realHeightPx)
-                if (realShortSide <= 0 ||
-                    realShortSide < windowShortSide ||
-                    windowShortSide < realShortSide * REAL_SHORT_SIDE_MIN_WINDOW_RATIO
-                ) {
+                if (realShortSide <= 0 || realShortSide < windowShortSide) {
                     windowShortSide.toFloat()
                 } else {
                     realShortSide.toFloat()

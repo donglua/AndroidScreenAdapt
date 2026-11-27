@@ -818,7 +818,10 @@ internal object ScreenAdaptEngine {
 
     private fun canSyncApplication(activity: Activity, session: ActivitySession): Boolean {
         if (session.isNativeMode) return false
-        val inMultiWindow = session.cachedBounds?.inMultiWindow ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        val cachedBounds = session.cachedBounds
+        val constrained = if (cachedBounds != null) {
+            AdaptCalculator.isWindowConstrained(cachedBounds)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 activity.isInMultiWindowMode
             } catch (_: Exception) {
@@ -827,7 +830,7 @@ internal object ScreenAdaptEngine {
         } else {
             false
         }
-        if (inMultiWindow) return false
+        if (constrained) return false
         return synchronized(sessionLock) {
             if (resumedActivities.contains(activity)) return true
             !session.resumedOnce && resumedActivities.none { it !== activity }

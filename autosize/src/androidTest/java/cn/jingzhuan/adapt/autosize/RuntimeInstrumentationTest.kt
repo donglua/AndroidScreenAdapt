@@ -159,6 +159,41 @@ class RuntimeInstrumentationTest {
             }
         }
 
+        WindowBoundsResolver.resolveCurrentWindowOverrideForTesting = { _ ->
+            WindowBounds(
+                widthPx = 1400,
+                heightPx = 1600,
+                realWidthPx = 2560,
+                realHeightPx = 1600,
+                orientation = CoreOrientation.PORTRAIT,
+                inMultiWindow = false
+            ) to WindowInfo(
+                widthPx = 1400,
+                heightPx = 1600,
+                realWidthPx = 2560,
+                realHeightPx = 1600,
+                statusBarInsetPx = 0,
+                navigationBarInsetPx = 0,
+                configurationOrientation = Configuration.ORIENTATION_PORTRAIT,
+                requestedOrientation = -1,
+                inMultiWindow = false,
+                stable = true
+            )
+        }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ScreenAdaptEngine.resetForTesting()
+            ScreenAdapt.init(app) {
+                designSize(360f, 640f)
+            }
+        }
+        ActivityScenario.launch(TestCustomAdaptActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val info = ScreenAdapt.getWindowInfo(activity)!!
+                assertEquals(info.widthPx / 400f, activity.resources.displayMetrics.density, 1e-4f)
+                assertEquals(initialAppDensity, app.resources.displayMetrics.density, 1e-4f)
+            }
+        }
+
         WindowBoundsResolver.resolveCurrentWindowOverrideForTesting = null
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             ScreenAdaptEngine.resetForTesting()

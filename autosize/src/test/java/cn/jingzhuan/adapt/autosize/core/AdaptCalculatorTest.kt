@@ -329,4 +329,55 @@ class AdaptCalculatorTest {
         assertEquals("deferred_fallback", fallback.reason)
         assertEquals(1080f / 360f, fallback.target!!.density, 1e-6f)
     }
+
+    @Test
+    fun `constrained sub-window detection checks both short and long sides for MagicWindow compatibility`() {
+        val fullscreenWithInsets = WindowBounds(
+            widthPx = 2340,
+            heightPx = 1017,
+            realWidthPx = 2400,
+            realHeightPx = 1080,
+            inMultiWindow = false
+        )
+        assertFalse(AdaptCalculator.isWindowConstrained(fullscreenWithInsets))
+
+        // 16:10 tablet centered MagicWindow (1400x1600 on 2560x1600) where inMultiWindow may be false
+        // and short side is 87.5% (>= 85%), while long side is 62.5% (< 85%).
+        val tabletMagicWindow16x10 = WindowBounds(
+            widthPx = 1400,
+            heightPx = 1600,
+            realWidthPx = 2560,
+            realHeightPx = 1600,
+            inMultiWindow = false
+        )
+        assertTrue(AdaptCalculator.isWindowConstrained(tabletMagicWindow16x10))
+        val magic16x10Res = AdaptCalculator.calculate(
+            AdaptInput(
+                baseSpec(basis = CoreAdaptBasis.SHORT_SIDE, effectiveDesignSizeDp = 420f, useRealDisplayShortSide = true),
+                tabletMagicWindow16x10,
+                defaultNative
+            )
+        )
+        assertEquals(AdaptStatus.APPLIED, magic16x10Res.status)
+        assertEquals(1400f / 420f, magic16x10Res.target!!.density, 1e-6f)
+
+        // MatePad centered MagicWindow (1400x1840 on 2800x1840) where inMultiWindow may be false.
+        val matePadMagicWindow = WindowBounds(
+            widthPx = 1400,
+            heightPx = 1840,
+            realWidthPx = 2800,
+            realHeightPx = 1840,
+            inMultiWindow = false
+        )
+        assertTrue(AdaptCalculator.isWindowConstrained(matePadMagicWindow))
+        val matePadRes = AdaptCalculator.calculate(
+            AdaptInput(
+                baseSpec(basis = CoreAdaptBasis.SHORT_SIDE, effectiveDesignSizeDp = 420f, useRealDisplayShortSide = true),
+                matePadMagicWindow,
+                defaultNative
+            )
+        )
+        assertEquals(AdaptStatus.APPLIED, matePadRes.status)
+        assertEquals(1400f / 420f, matePadRes.target!!.density, 1e-6f)
+    }
 }
